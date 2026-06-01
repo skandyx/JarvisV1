@@ -61,8 +61,14 @@ $PIP install --quiet mss 2>/dev/null
 echo "        mss installed (fast screen capture)"
 $PIP install --quiet pytesseract 2>/dev/null
 echo "        pytesseract installed (OCR reading)"
-$PIP install --quiet pygetwindow 2>/dev/null
-echo "        pygetwindow installed (active window detection)"
+# pygetwindow ne fonctionne PAS sur Linux — il lève NotImplementedError.
+# On ne l'installe que sur macOS / Windows.
+if [[ "$OSTYPE" == "linux"* ]]; then
+    echo "        pygetwindow ignoré (non supporté sur Linux)"
+else
+    $PIP install --quiet pygetwindow 2>/dev/null
+    echo "        pygetwindow installed (active window detection)"
+fi
 echo ""
 echo "        OCR NOTE: For screen text reading, install Tesseract:"
 echo "          Mac:   brew install tesseract"

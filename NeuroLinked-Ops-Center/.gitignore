@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+
+# Brain state (local data)
+neurolinked-brain/brain_state/
+
+# Jarvis sessions (local data)
+ops-center/_jarvis/sessions/
+ops-center/_jarvis/brain_storage/
+
+# Launch token (security)
+.launch-token
+neurolinked-brain/.launch-token
+
+# Logs
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Distribution
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Recordings
+recordings/

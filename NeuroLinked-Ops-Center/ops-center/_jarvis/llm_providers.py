@@ -380,9 +380,12 @@ def from_config(cfg: dict) -> _Provider:
     fournisseur disposant d'une clé API non vide dans la config.
     """
     name = (cfg.get("llm_provider") or "").lower().strip()
+    # "auto" est traité comme vide → déclenche l'auto-détection
+    if name == "auto":
+        name = ""
     model = cfg.get("llm_model") or ""
 
-    # --- Auto-détection : si llm_provider est vide, chercher la première clé API renseignée ---
+    # --- Auto-détection : si llm_provider est vide ou "auto", chercher la première clé API renseignée ---
     if not name:
         # Ordre de préférence pour l'auto-détection
         _AUTO_DETECT_ORDER = [

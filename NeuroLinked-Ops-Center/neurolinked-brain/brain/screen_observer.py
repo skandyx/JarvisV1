@@ -47,10 +47,12 @@ except ImportError:
     HAS_OCR = False
 
 # Active window detection (optional)
+# Note: pygetwindow raises NotImplementedError on Linux at import time,
+# so we catch both ImportError and NotImplementedError.
 try:
     import pygetwindow as gw
     HAS_WINDOW = True
-except ImportError:
+except (ImportError, NotImplementedError):
     HAS_WINDOW = False
 
 

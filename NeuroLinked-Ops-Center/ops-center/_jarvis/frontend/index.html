@@ -140,12 +140,13 @@
                     <label class="settings-field">
                         <span>Fournisseur</span>
                         <select id="s-llm_provider">
+                            <option value="">Auto-détection (utilise la première clé API trouvée)</option>
+                            <option value="mistral">Mistral AI</option>
                             <option value="anthropic">Claude (Anthropic)</option>
                             <option value="openai">GPT (OpenAI)</option>
                             <option value="groq">Groq (rapide, gratuit)</option>
                             <option value="ollama">Ollama (local, gratuit)</option>
                             <option value="xai">Grok (xAI)</option>
-                            <option value="mistral">Mistral AI</option>
                             <option value="openrouter">OpenRouter (multi-modèles)</option>
                             <option value="zai">Z.ai / GLM (ZhipuAI)</option>
                         </select>
