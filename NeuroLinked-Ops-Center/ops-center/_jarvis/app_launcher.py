@@ -85,7 +85,12 @@ def launch(name_or_alias: str) -> str:
     try:
         # Special-case: URL / protocol handlers (e.g. https://, claude://, spotify:)
         if launcher.startswith(("http://", "https://", "spotify:", "claude:", "vscode:", "obsidian:")):
-            os.startfile(launcher)  # opens in default handler
+            if hasattr(os, "startfile"):
+                os.startfile(launcher)  # Windows
+            else:
+                # Linux/macOS : ouvrir avec le navigateur par défaut
+                import webbrowser
+                webbrowser.open(launcher)
             return f"Opened '{app.get('name')}' via protocol."
         # Standard process spawn — non-blocking, detached so Jarvis returns
         # immediately even if the launched app takes time to render.

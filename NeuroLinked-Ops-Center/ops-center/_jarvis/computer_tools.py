@@ -32,7 +32,8 @@ except Exception as e:
 try:
     import pygetwindow as gw
     _GW_OK = True
-except Exception:
+except (ImportError, NotImplementedError):
+    # pygetwindow ne fonctionne pas sur Linux
     _GW_OK = False
 
 try:

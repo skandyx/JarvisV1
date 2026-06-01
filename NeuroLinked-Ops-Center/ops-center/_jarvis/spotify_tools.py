@@ -662,14 +662,19 @@ def play_wake_song() -> str:
             f"Wake song '{track}' isn't a Spotify URI. Set it via set_wake_song with a spotify: URI or open.spotify.com URL."
         )
 
-    # Launch desktop client. `cmd /c start "" <uri>` lets Windows resolve the
-    # spotify: protocol handler — no shell window, no new browser tab.
+    # Launch desktop client. On Windows: `cmd /c start "" <uri>`.
+    # On Linux/macOS: use xdg-open or webbrowser.
     import subprocess
     try:
-        subprocess.Popen(
-            ["cmd.exe", "/c", "start", "", uri],
-            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-        )
+        if os.name == "nt":
+            subprocess.Popen(
+                ["cmd.exe", "/c", "start", "", uri],
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+        else:
+            # Linux/macOS : ouvrir l'URI Spotify via le gestionnaire de protocole
+            import webbrowser
+            webbrowser.open(uri)
         return f"Playing {uri} in Spotify desktop."
     except Exception as e:
         return f"Could not launch Spotify desktop ({e})."

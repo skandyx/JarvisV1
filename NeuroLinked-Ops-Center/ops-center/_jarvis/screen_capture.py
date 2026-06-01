@@ -5,11 +5,18 @@ Takes screenshots and describes them via Claude Vision.
 
 import base64
 import io
-from PIL import ImageGrab
+
+try:
+    from PIL import ImageGrab
+    _GRAB_OK = True
+except Exception:
+    _GRAB_OK = False
 
 
 def capture_screen() -> bytes:
     """Capture the entire screen, return PNG bytes."""
+    if not _GRAB_OK:
+        raise RuntimeError("PIL.ImageGrab non disponible (Linux sans display ou Pillow manquant)")
     img = ImageGrab.grab()
     buf = io.BytesIO()
     img.save(buf, format="PNG")
