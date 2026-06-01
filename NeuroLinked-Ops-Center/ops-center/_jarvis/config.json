@@ -1,4 +1,6 @@
 {
+  "llm_provider": "",
+  "llm_model": "",
   "anthropic_api_key": "",
   "openai_api_key": "",
   "groq_api_key": "",
@@ -6,8 +8,8 @@
   "openrouter_api_key": "",
   "elevenlabs_api_key": "",
   "elevenlabs_voice_id": "",
-  "user_name": "Friend",
-  "user_address": "sir",
+  "user_name": "Ami",
+  "user_address": "Monsieur",
   "city": "",
   "workspace_path": "",
   "spotify_track": "",

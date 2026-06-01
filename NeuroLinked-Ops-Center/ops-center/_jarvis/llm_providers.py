@@ -1,22 +1,25 @@
 """
-LLM Provider Layer — Unified interface for Anthropic, OpenAI, Groq, and Ollama.
+Couche Fournisseur LLM — Interface unifiée pour Anthropic, OpenAI, Groq,
+Ollama, xAI, Mistral AI et OpenRouter.
 
-All providers return an Anthropic-shaped response:
+Tous les fournisseurs retournent une réponse au format Anthropic :
 
-    response.content       -> list of blocks, each with .type in {"text","tool_use"}
+    response.content       -> liste de blocs, chacun avec .type dans {"text","tool_use"}
     response.stop_reason   -> "tool_use" | "end_turn" | "max_tokens"
 
-So server.py's conversation loop stays Anthropic-native and works across all
-providers without rewrites. To add a new provider, implement one new subclass
-of _Provider below and register it in _PROVIDERS.
+Ainsi la boucle de conversation de server.py reste native Anthropic et
+fonctionne avec tous les fournisseurs sans réécriture. Pour ajouter un
+nouveau fournisseur, implémentez une nouvelle sous-classe de _Provider
+et enregistrez-la dans _PROVIDERS.
 
-Tool schemas are passed in Anthropic format:
+Les schémas d'outils sont passés au format Anthropic :
     [{ "name": "add_task", "description": "...", "input_schema": {...} }, ...]
 
-Messages are passed in Anthropic format:
+Les messages sont passés au format Anthropic :
     [{ "role": "user" | "assistant", "content": str | list[block] }, ...]
 
-Provider-specific tool-call formats are translated inside each adapter.
+Les formats d'appel d'outils spécifiques à chaque fournisseur sont
+traduits à l'intérieur de chaque adaptateur.
 """
 
 from __future__ import annotations
@@ -69,7 +72,7 @@ class _Provider:
 
 
 # ---------------------------------------------------------------------------
-# Anthropic (Claude) — native format, zero translation
+# Anthropic (Claude) — format natif, zéro traduction
 # ---------------------------------------------------------------------------
 
 class AnthropicProvider(_Provider):
@@ -103,7 +106,7 @@ class AnthropicProvider(_Provider):
 
 
 # ---------------------------------------------------------------------------
-# OpenAI (GPT) — translates tool_calls <-> Anthropic tool_use blocks
+# OpenAI (GPT) — traduit tool_calls <-> blocs Anthropic tool_use
 # ---------------------------------------------------------------------------
 
 class OpenAIProvider(_Provider):
@@ -249,7 +252,7 @@ class OpenAIProvider(_Provider):
 
 
 # ---------------------------------------------------------------------------
-# Groq — OpenAI-compatible API, just a different base_url
+# Groq — API compatible OpenAI, URL de base différente
 # ---------------------------------------------------------------------------
 
 class GroqProvider(OpenAIProvider):
@@ -260,7 +263,7 @@ class GroqProvider(OpenAIProvider):
 
 
 # ---------------------------------------------------------------------------
-# Ollama (local) — free, no API key, uses OpenAI-compatible endpoint
+# Ollama (local) — gratuit, pas de clé API, utilise l'API compatible OpenAI
 # ---------------------------------------------------------------------------
 
 class OllamaProvider(OpenAIProvider):
@@ -278,7 +281,7 @@ class OllamaProvider(OpenAIProvider):
 
 
 # ---------------------------------------------------------------------------
-# xAI Grok — also OpenAI-compatible
+# xAI Grok — également compatible OpenAI
 # ---------------------------------------------------------------------------
 
 class XAIProvider(OpenAIProvider):
@@ -289,7 +292,7 @@ class XAIProvider(OpenAIProvider):
 
 
 # ---------------------------------------------------------------------------
-# Mistral AI — OpenAI-compatible API
+# Mistral AI — API compatible OpenAI
 # ---------------------------------------------------------------------------
 
 class MistralProvider(OpenAIProvider):
@@ -300,7 +303,7 @@ class MistralProvider(OpenAIProvider):
 
 
 # ---------------------------------------------------------------------------
-# OpenRouter — OpenAI-compatible API with many models
+# OpenRouter — API compatible OpenAI avec de nombreux modèles
 # ---------------------------------------------------------------------------
 
 class OpenRouterProvider(OpenAIProvider):
@@ -313,7 +316,7 @@ class OpenRouterProvider(OpenAIProvider):
 
 
 # ---------------------------------------------------------------------------
-# Registry + factory
+# Registre + fabrique
 # ---------------------------------------------------------------------------
 
 _PROVIDERS = {
@@ -327,6 +330,7 @@ _PROVIDERS = {
     "xai":       XAIProvider,
     "grok":      XAIProvider,           # alias
     "mistral":   MistralProvider,
+    "mistralai": MistralProvider,   # alias
     "openrouter": OpenRouterProvider,
 }
 
@@ -336,11 +340,11 @@ def available_providers() -> list[str]:
 
 
 def make_provider(name: str, api_key: str = "", model: str = "", **kwargs) -> _Provider:
-    """Build a provider by name. Unknown names fall back to Anthropic."""
+    """Construit un fournisseur par nom. Les noms inconnus lèvent une ValueError."""
     cls = _PROVIDERS.get((name or "").lower())
     if cls is None:
         raise ValueError(
-            f"Unknown LLM provider '{name}'. Available: {', '.join(available_providers())}"
+            f"Fournisseur LLM inconnu '{name}'. Disponibles : {', '.join(available_providers())}"
         )
     init_kwargs = {}
     if model:
@@ -357,9 +361,58 @@ def from_config(cfg: dict) -> _Provider:
         llm_model           : remplacement de modèle optionnel
         <provider>_api_key  : clé pour le fournisseur actif (ex. "openai_api_key")
     Remonte à `anthropic_api_key` quand llm_provider est anthropic (rétrocompatibilité).
+
+    Si llm_provider est vide ou non défini, détecte automatiquement le premier
+    fournisseur disposant d'une clé API non vide dans la config.
     """
-    name = (cfg.get("llm_provider") or "anthropic").lower()
+    name = (cfg.get("llm_provider") or "").lower().strip()
     model = cfg.get("llm_model") or ""
+
+    # --- Auto-détection : si llm_provider est vide, chercher la première clé API renseignée ---
+    if not name:
+        # Ordre de préférence pour l'auto-détection
+        _AUTO_DETECT_ORDER = [
+            ("mistral",    "mistral_api_key"),
+            ("anthropic",  "anthropic_api_key"),
+            ("openai",     "openai_api_key"),
+            ("groq",       "groq_api_key"),
+            ("openrouter", "openrouter_api_key"),
+            ("xai",        "xai_api_key"),
+            ("ollama",     "ollama_api_key"),
+        ]
+        for provider_name, key_name in _AUTO_DETECT_ORDER:
+            val = cfg.get(key_name, "")
+            if isinstance(val, str):
+                val = val.strip()
+            if val and val != "ollama" or (provider_name == "ollama" and val == "ollama"):
+                # Vérifier aussi les variables d'environnement
+                if val or os.environ.get(f"{provider_name.upper()}_API_KEY"):
+                    name = provider_name
+                    print(f"[jarvis] Auto-détection : fournisseur '{name}' détecté (clé {key_name} renseignée)", flush=True)
+                    break
+
+        # Si toujours rien, essayer les variables d'environnement
+        if not name:
+            _ENV_DETECT = [
+                ("mistral",   "MISTRAL_API_KEY"),
+                ("anthropic", "ANTHROPIC_API_KEY"),
+                ("openai",    "OPENAI_API_KEY"),
+                ("groq",      "GROQ_API_KEY"),
+                ("openrouter","OPENROUTER_API_KEY"),
+                ("xai",       "XAI_API_KEY"),
+            ]
+            for provider_name, env_var in _ENV_DETECT:
+                if os.environ.get(env_var):
+                    name = provider_name
+                    print(f"[jarvis] Auto-détection : fournisseur '{name}' détecté (variable env {env_var})", flush=True)
+                    break
+
+        if not name:
+            raise ValueError(
+                "Aucun fournisseur LLM configuré. Veuillez définir 'llm_provider' et une "
+                "clé API correspondante dans config.json ou via l'interface des paramètres. "
+                "Fournisseurs disponibles : anthropic, openai, groq, ollama, xai, mistral, openrouter."
+            )
 
     if name in ("anthropic", "claude"):
         key = cfg.get("anthropic_api_key") or cfg.get("claude_api_key") or os.environ.get("ANTHROPIC_API_KEY") or ""
@@ -376,7 +429,7 @@ def from_config(cfg: dict) -> _Provider:
     elif name in ("xai", "grok"):
         key = cfg.get("xai_api_key") or cfg.get("grok_api_key") or os.environ.get("XAI_API_KEY") or ""
         model = model or "grok-2-latest"
-    elif name == "mistral":
+    elif name in ("mistral", "mistralai"):
         key = cfg.get("mistral_api_key") or os.environ.get("MISTRAL_API_KEY") or ""
         model = model or "mistral-large-latest"
     elif name == "openrouter":

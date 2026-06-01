@@ -2316,7 +2316,7 @@ async def process_message(session_id: str, user_text: str, ws: WebSocket, frame_
         if llm is None:
             await _speak(
                 ws,
-                "Je n'ai pas de LLM configuré, monsieur. Veuillez ouvrir les paramètres et ajouter une clé API.",
+                "Je n'ai pas de modèle linguistique configuré. Veuillez ouvrir les paramètres (icône ⚙), sélectionner un fournisseur comme Mistral AI, OpenAI ou autre, puis coller votre clé API et cliquer sur Enregistrer.",
                 source="jarvis",
             )
             return

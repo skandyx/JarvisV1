@@ -125,8 +125,8 @@ async function maybePromptFirstRun() {
         openSettings();
         setTimeout(() => {
             setStatus(
-                "Welcome — paste an API key for your chosen LLM provider, then click Save. " +
-                "Anthropic (Claude), OpenAI, Groq, xAI, Mistral AI, and OpenRouter keys all work.",
+                "Bienvenue — collez votre clé API pour le fournisseur choisi, puis cliquez sur Enregistrer. " +
+                "Les clés Anthropic (Claude), OpenAI, Groq, xAI, Mistral AI et OpenRouter fonctionnent toutes.",
                 true
             );
         }, 200);
