@@ -26,6 +26,12 @@ from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 
+# Empêcher urllib de passer par un proxy pour les requêtes locales (Brain, Jarvis).
+# Sans ça, si HTTP_PROXY est défini, les appels vers localhost échouent avec :
+#   "zero proxy: <urlopen error [Errno 111] Connection refused>"
+os.environ.setdefault("NO_PROXY", "localhost,127.0.0.1,0.0.0.0")
+os.environ.setdefault("no_proxy", "localhost,127.0.0.1,0.0.0.0")
+
 # Windows default console codec (cp1252) can't encode the Unicode arrows/em-dashes
 # used in log lines — force UTF-8 so startup doesn't crash.
 try:

@@ -12,6 +12,10 @@ import sys
 import threading
 import time
 
+# Empêcher urllib de passer par un proxy pour les requêtes locales.
+os.environ.setdefault("NO_PROXY", "localhost,127.0.0.1,0.0.0.0")
+os.environ.setdefault("no_proxy", "localhost,127.0.0.1,0.0.0.0")
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse

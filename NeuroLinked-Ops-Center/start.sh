@@ -26,6 +26,10 @@ fi
 source "$VENV_DIR/bin/activate"
 mkdir -p "$LOG_DIR"
 
+# Désactiver le proxy pour les requêtes locales (évite l'erreur "zero proxy: Connection refused")
+export NO_PROXY="localhost,127.0.0.1,0.0.0.0"
+export no_proxy="localhost,127.0.0.1,0.0.0.0"
+
 # Jeton partagé
 TOKEN_FILE="$SCRIPT_DIR/neurolinked-brain/.launch-token"
 if [ -f "$TOKEN_FILE" ]; then

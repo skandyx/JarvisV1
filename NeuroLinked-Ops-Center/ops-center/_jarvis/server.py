@@ -12,6 +12,13 @@ import re
 import sys
 import time
 
+# Empêcher urllib/httpx de passer par un proxy pour les requêtes locales.
+# Sans ça, si HTTP_PROXY ou HTTPS_PROXY est défini sur la machine,
+# les appels vers localhost:8020 (Brain) ou localhost:8340 échouent avec :
+#   "zero proxy: <urlopen error [Errno 111] Connection refused>"
+os.environ.setdefault("NO_PROXY", "localhost,127.0.0.1,0.0.0.0")
+os.environ.setdefault("no_proxy", "localhost,127.0.0.1,0.0.0.0")
+
 # Windows default console codec (cp1252) can't encode Unicode â†’ crashes print().
 # Force stdout/stderr to UTF-8 so log lines never kill the websocket.
 try:
@@ -1252,7 +1259,6 @@ TOOLS = [
             },
             "required": ["method", "path"],
         },
-    },
     },
     # ====================================================================
     #   MCP MANAGER — Installer, créer et gérer des serveurs MCP
