@@ -1,5 +1,5 @@
 """
-LLM Provider Layer — Unified interface for Anthropic, OpenAI, Groq, Ollama, xAI, Mistral, and OpenRouter.
+LLM Provider Layer — Unified interface for Anthropic, OpenAI, Groq, and Ollama.
 
 All providers return an Anthropic-shaped response:
 
@@ -325,9 +325,8 @@ _PROVIDERS = {
     "ollama":    OllamaProvider,
     "local":     OllamaProvider,       # alias
     "xai":       XAIProvider,
-    "grok":      XAIProvider,          # alias
+    "grok":      XAIProvider,           # alias
     "mistral":   MistralProvider,
-    "mistralai": MistralProvider,      # alias
     "openrouter": OpenRouterProvider,
 }
 
@@ -354,7 +353,7 @@ def from_config(cfg: dict) -> _Provider:
     """Build the active provider from a config.json dict.
 
     Expected fields:
-        llm_provider        : "anthropic" | "openai" | "groq" | "ollama" | "xai" | "mistral" | "openrouter"
+        llm_provider        : "anthropic" | "openai" | "groq" | "ollama" | "xai"
         llm_model           : optional model override
         <provider>_api_key  : key for the active provider (e.g. "openai_api_key")
     Falls back to `anthropic_api_key` when llm_provider is anthropic (backwards compat).
@@ -377,7 +376,7 @@ def from_config(cfg: dict) -> _Provider:
     elif name in ("xai", "grok"):
         key = cfg.get("xai_api_key") or cfg.get("grok_api_key") or os.environ.get("XAI_API_KEY") or ""
         model = model or "grok-2-latest"
-    elif name in ("mistral", "mistralai"):
+    elif name == "mistral":
         key = cfg.get("mistral_api_key") or os.environ.get("MISTRAL_API_KEY") or ""
         model = model or "mistral-large-latest"
     elif name == "openrouter":

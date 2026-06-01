@@ -1,176 +1,144 @@
 # NeuroLinked Ops Center
 
-Un stack complet d'assistant IA local-first — **Jarvis** (IA voix/texte), le
-**NeuroLinked Brain** (mémoire neuromorphique persistante + tableau de bord 3D),
-et un tableau de bord **Ops Center** avec un exécuteur d'agents intégré. Les
-trois services tournent sur votre machine. Rien ne quitte votre ordinateur, à
-l'exception des appels API que vous choisissez d'effectuer.
+A complete local-first AI assistant stack — **Jarvis** (voice/text AI), the
+**NeuroLinked Brain** (a persistent neuromorphic memory + 3D dashboard), and an
+**Ops Center** dashboard with a built-in agent runner. All three run on your
+machine. Nothing leaves your computer except the API calls you choose to make.
 
-Ceci est l'instantané **v1 hérité** — ce qui alimentait les opérations internes
-du mainteneur avant la migration vers un système plus récent. Ça fonctionne.
-C'est à vous.
+This is the **legacy v1** snapshot — what powered the maintainer's internal ops
+before we moved to a newer system. It works. It's yours.
 
-> Construit et publié pour la communauté. Utilisez-le. Modifiez-le. Livrez-le.
-> Aucun support fourni — lisez d'abord la section dépannage.
+> Built and released for the community. Use it. Modify it. Ship it. No support
+> provided — read the troubleshooting section first.
 
 ---
 
-## Ce que vous obtenez
+## What you get
 
-| Service | Port | Description |
+| Service | Port | What it is |
 |---|---|---|
-| **Ops Center** | `8010` | Le tableau de bord que vous ouvrez chaque jour. Calendrier, documents, boîte de réception et exécuteur d'agents. Ouvrir sur `http://localhost:8010`. |
-| **NeuroLinked Brain** | `8020` | Un système de mémoire persistante sous forme de visualisation 3D d'un cerveau. Jarvis fait passer chaque conversation ici. Vous pouvez lui parler directement. Ouvrir sur `http://localhost:8020`. |
-| **Jarvis** | `8340` | L'assistant voix/texte. Mot d'activation « Hey Jarvis ». Dispose de plus de 60 outils intégrés — ouverture d'applications, recherche web, gestion de fichiers, CRM GHL, Spotify, vision, etc. Ouvrir sur `http://localhost:8340`. |
+| **Ops Center** | `8010` | The dashboard you open every day. Calendar, docs, inbox, and an agent runner. Open at `http://localhost:8010`. |
+| **NeuroLinked Brain** | `8020` | A persistent memory system styled as a 3D brain visualization. Jarvis pushes every conversation through here. You can talk to it directly. Open at `http://localhost:8020`. |
+| **Jarvis** | `8340` | The voice/text assistant. Wake word "Hey Jarvis." Has 60+ built-in tools — opening apps, web search, file management, GHL CRM, Spotify, vision, etc. Open at `http://localhost:8340`. |
 
-Chaque service est un service Python autonome. Ils communiquent entre eux via
-localhost. Pas de Docker, pas de Node, pas de compte cloud requis.
-
----
-
-## Démarrage rapide en 60 secondes (Windows)
-
-1. **Installez Python 3.11 ou plus récent.**
-   Téléchargez-le depuis https://www.python.org/downloads/.
-   **CRITIQUE :** cochez la case « Add Python to PATH » lors de l'installation.
-
-2. **Double-cliquez sur `START.bat`** dans ce dossier.
-   Le premier lancement prend environ 60 secondes pendant l'installation des
-   paquets Python. Par la suite, les démarrages prendront environ 15 secondes.
-
-3. **Votre navigateur s'ouvre sur `http://localhost:8010`.** C'est l'Ops Center.
-
-4. **Ajoutez une clé API (une seule fois).**
-   Cliquez sur l'icône engrenage (en bas à droite) → collez une clé API
-   Anthropic, OpenAI, Groq, Mistral, xAI ou OpenRouter → Enregistrer.
-   - Anthropic : https://console.anthropic.com — obtenez une clé `sk-ant-...`
-   - OpenAI : https://platform.openai.com/api-keys — obtenez une clé `sk-...`
-   - Groq (offre gratuite disponible) : https://console.groq.com/keys — obtenez une clé `gsk_...`
-   - xAI (Grok) : https://x.ai/api — obtenez une clé `xai-...`
-   - Mistral AI : https://console.mistral.ai — obtenez votre clé API
-   - OpenRouter (multi-modèles) : https://openrouter.ai/keys — obtenez une clé `sk-or-...`
-   - **Ou :** installez Ollama (https://ollama.ai) pour un LLM local gratuit, aucune clé nécessaire.
-
-5. **Testez.** Allez dans la section Agent Runner → cliquez `Run` sur l'agent
-   pré-installé `Finance Watchdog`. Il exercera le brain + LLM et vous verrez
-   le résultat en quelques secondes.
-
-C'est tout. Vous avez maintenant un stack IA ops local entièrement fonctionnel.
+Each is a standalone Python service. They talk to each other over localhost.
+No Docker, no Node, no cloud account required.
 
 ---
 
-## Démarrage rapide (macOS / Linux)
+## 60-second quick start (Windows)
+
+1. **Install Python 3.11 or newer.**
+   Get it from https://www.python.org/downloads/.
+   **CRITICAL:** check the box that says "Add Python to PATH" during install.
+
+2. **Double-click `START.bat`** in this folder.
+   First run takes ~60 seconds while it installs Python packages. After that,
+   future starts take ~15 seconds.
+
+3. **Your browser opens to `http://localhost:8010`.** That's the Ops Center.
+
+4. **Add an API key (one-time).**
+   Click the gear icon (bottom-right) → paste an Anthropic, OpenAI, or Groq
+   API key → Save.
+   - Anthropic: https://console.anthropic.com — get an `sk-ant-...` key
+   - OpenAI: https://platform.openai.com/api-keys — get an `sk-...` key
+   - Groq (free tier exists): https://console.groq.com/keys — get a `gsk_...` key
+   - **Or:** install Ollama (https://ollama.ai) for free local LLM, no key needed.
+
+5. **Test it.** Hit the agent runner section → click `Run` on the
+   pre-installed `Finance Watchdog` agent. It'll exercise the brain + LLM and
+   you'll see it complete in a few seconds.
+
+That's it. You now have a fully working local AI ops stack.
+
+---
+
+## Quick start (macOS / Linux)
 
 ```bash
-# Ouvrez le Terminal, cd dans ce dossier
-cd ~/Desktop/NeuroLinked-Ops-Center   # ou là où vous l'avez placé
+# Open Terminal, cd into this folder
+cd ~/Desktop/NeuroLinked-Ops-Center   # or wherever you put it
 
-# Installez les dépendances Python (une seule fois)
+# Install Python deps (one-time)
 python3 -m pip install --user fastapi uvicorn websockets httpx pyyaml anthropic openai groq psutil cryptography pillow numpy python-multipart
 
-# Démarrez les trois services dans trois onglets de terminal :
+# Start the three services in three terminal tabs:
 (cd neurolinked-brain && python3 run.py --port 8020 --host 127.0.0.1)
 (cd ops-center/_jarvis && python3 server.py)
 (cd ops-center && python3 server.py)
 
-# Ouvrez http://localhost:8010
+# Open http://localhost:8010
 ```
 
-(Ou transformez `START.bat` en script `.sh` — même principe.)
+(Or modify `START.bat` into a `.sh` script — same idea.)
 
 ---
 
-## Ce que fait chaque service
+## What each service does
 
 ### Ops Center (`localhost:8010`)
-Le tableau de bord quotidien. Page unique, pas de connexion. Fonctionnalités :
+The daily dashboard. Single page, no login. Features:
 
-- **Calendrier** — ajoutez des événements, consultez ce qui arrive
-- **Documents** — liste de documents en accès rapide, collez vos liens
-- **Boîte de réception** — une surface unifiée pour les notifications type Slack/e-mail
-- **Agent Runner** — exécute les agents définis dans `ops-center/custom_agents.json`
-- **Paramètres (icône engrenage)** — clés API, config Jarvis, thème
+- **Calendar** — drop events, see what's coming up
+- **Docs** — quick-access doc list, paste links to your stuff
+- **Inbox** — a unified surface for Slack/email-style notifications
+- **Agent Runner** — runs the agents defined in `ops-center/custom_agents.json`
+- **Settings (gear icon)** — API keys, Jarvis config, theme
 
 ### NeuroLinked Brain (`localhost:8020`)
-Un stockage mémoire neuromorphique visualisé comme un cerveau 3D. 10 régions
-cérébrales, chacune avec des centaines de « neurones » — lorsque vous ajoutez
-une note ou avez une conversation, les neurones s'activent et les connexions se
-renforcent. Au fil du temps, le cerveau « apprend » quels sujets comptent pour
-vous.
+A neuromorphic memory store visualized as a 3D brain. 10 brain regions,
+each with hundreds of "neurons" — when you add a note or have a
+conversation, neurons fire and connections strengthen. Over time the brain
+"learns" what topics matter to you.
 
-- **Tableau de bord 3D** — voyez le cerveau penser en temps réel
-- **Notes** — vos notes second cerveau, recherchables
-- **Tâches** — suivi de to-do intégré à Jarvis
-- **Conversations** — Jarvis fait passer chaque discussion ici pour que le
-  cerveau accumule du contexte. Demandez-lui des semaines plus tard « qu'avons-
-  nous décidé à propos de X ? »
+- **3D dashboard** — see the brain thinking in real-time
+- **Notes** — your second-brain notes, searchable
+- **Tasks** — to-do tracking that integrates with Jarvis
+- **Conversations** — Jarvis pushes every chat through here so the brain
+  accumulates context. Ask it weeks later "what did we decide about X?"
 
 ### Jarvis (`localhost:8340`)
-Un assistant voix/texte inspiré du J.A.R.V.I.S. de Tony Stark. Écoute
-« Hey Jarvis » via votre microphone (vous devrez accorder la permission micro
-dans Chrome la première fois). Ou tapez dans la zone de saisie.
+A voice/text assistant inspired by Tony Stark's J.A.R.V.I.S. Listens for
+"Hey Jarvis" through your microphone (you'll need to grant Chrome mic
+permission the first time). Or type into the input box.
 
-Outils intégrés (sans configuration supplémentaire) :
-- **Brain** — recherche, mémorisation, rappel (communique avec le NeuroLinked Brain)
-- **Tâches** — ajouter, lister, compléter des tâches
-- **Web** — recherche via DuckDuckGo, récupération de pages, résumé
-- **Fichiers** — lire, écrire, lister les fichiers dans un dossier workspace
-- **Applications** — ouvrir des applications de bureau (Chrome, VS Code, Spotify, etc.) par nom
-- **Vision** — `regarde cet écran` (prend une capture d'écran, envoie au LLM avec vision)
-- **Shell** — exécuter des commandes shell (dans un workspace, ou à l'échelle du système si activé)
-- **Spotify** — contrôler la lecture si vous fournissez les identifiants Spotify
-- **GHL (GoHighLevel CRM)** — récupérer des contacts, envoyer des messages, déclencher des workflows si vous avez un compte GHL
+Built-in tools (no extra setup):
+- **Brain** — search, remember, recall (talks to the NeuroLinked Brain above)
+- **Tasks** — add, list, complete tasks
+- **Web** — search via DuckDuckGo, fetch pages, summarize
+- **Files** — read, write, list files in a workspace folder
+- **Apps** — open desktop apps (Chrome, VS Code, Spotify, etc.) by name
+- **Vision** — `look at this screen` (takes a screenshot, sends to vision-capable LLM)
+- **Shell** — run shell commands (scoped to a workspace, or system-wide if enabled)
+- **Spotify** — control playback if you provide Spotify credentials
+- **GHL (GoHighLevel CRM)** — fetch contacts, send messages, trigger workflows if you have a GHL account
 
-Ouvrez `localhost:8340` directement, ou utilisez le panneau de chat qui
-apparaît dans l'Ops Center.
-
----
-
-## Fournisseurs LLM supportés
-
-Jarvis prend en charge **7 fournisseurs LLM**, tous interchangeables à chaud
-depuis les paramètres (icône engrenage) :
-
-| Fournisseur | Modèle par défaut | Clé requise | Obtenir une clé |
-|---|---|---|---|
-| **Anthropic** (Claude) | `claude-haiku-4-5-20251001` | Oui | https://console.anthropic.com |
-| **OpenAI** (GPT) | `gpt-4o-mini` | Oui | https://platform.openai.com/api-keys |
-| **Groq** | `llama-3.3-70b-versatile` | Oui (gratuit) | https://console.groq.com/keys |
-| **xAI** (Grok) | `grok-2-latest` | Oui | https://x.ai/api |
-| **Mistral AI** | `mistral-large-latest` | Oui | https://console.mistral.ai |
-| **OpenRouter** (multi-modèles) | `openai/gpt-4o-mini` | Oui | https://openrouter.ai/keys |
-| **Ollama** (local) | `llama3.1:8b` | Non | https://ollama.com |
-
-Vous pouvez surcharger le modèle par défaut dans les paramètres en renseignant
-le champ « Model ». Par exemple : `mistral-small-latest`, `openai/gpt-4o`,
-`deepseek/deepseek-chat` (via OpenRouter), etc.
-
-**Aucune clé n'est obligatoire.** Avec Ollama installé localement, tout le
-stack fonctionne gratuitement.
+Open `localhost:8340` directly, or use the chat panel that appears in
+the Ops Center.
 
 ---
 
-## Ajouter vos propres agents
+## Adding your own agents
 
-Les agents sont définis dans `ops-center/custom_agents.json`. Le fichier est
-livré avec deux exemples (`Finance Watchdog`, `Meeting Prep Pro`). Ajoutez-en
-un nouveau :
+Agents are defined in `ops-center/custom_agents.json`. The file ships with
+two examples (`Finance Watchdog`, `Meeting Prep Pro`). Add a new one:
 
 ```json
 {
-  "mon_qualificateur_leads": {
-    "id": "mon_qualificateur_leads",
-    "name": "Qualificateur de Leads",
-    "description": "Lit les nouveaux leads, les note, rédige une réponse.",
+  "my_lead_qualifier": {
+    "id": "my_lead_qualifier",
+    "name": "Lead Qualifier",
+    "description": "Reads new leads, scores them, drafts a reply.",
     "steps": [
-      { "type": "brain_search", "inputs": { "query": "nouveaux leads cette semaine" } },
-      { "type": "reason",       "inputs": { "prompt": "Notez chaque lead de 1 à 10 sur la pertinence. Brève justification." } },
+      { "type": "brain_search", "inputs": { "query": "new leads this week" } },
+      { "type": "reason",       "inputs": { "prompt": "Score each lead 1-10 on fit. Brief why." } },
       { "type": "draft_email",  "inputs": {
-          "to": "leads@votreentreprise.com",
-          "subject": "Notes des leads — cette semaine",
-          "notes": "Utilisez le résultat de notation de l'étape précédente."
+          "to": "leads@yourcompany.com",
+          "subject": "Lead scores — this week",
+          "notes": "Use the scoring output from the prior step."
       }},
-      { "type": "notify", "inputs": { "channel": "slack", "message": "Notes des leads prêtes." } }
+      { "type": "notify", "inputs": { "channel": "slack", "message": "Lead scores ready." } }
     ],
     "created_at": "2026-01-01T00:00:00",
     "enabled": true
@@ -178,126 +146,115 @@ un nouveau :
 }
 ```
 
-Enregistrez → rafraîchissez l'Ops Center → votre nouvel agent apparaît. Cliquez
-`Run`.
+Save → refresh the Ops Center → your new agent appears. Hit `Run`.
 
-**Types d'étapes disponibles :** `brain_search`, `reason`, `draft_email`,
-`notify`, `create_task`, `summarize`, `call_api`.
+**Available step types:** `brain_search`, `reason`, `draft_email`, `notify`,
+`create_task`, `summarize`, `call_api`.
 
 ---
 
-## Intégrations optionnelles
+## Optional integrations
 
-Vous pouvez brancher n'importe laquelle. Ouvrez l'icône engrenage dans
-l'Ops Center, collez votre clé, enregistrez.
+You can plug in any of these. Open the gear icon in the Ops Center, paste
+your key, save.
 
-| Intégration | Ce que ça débloque | Où obtenir une clé |
+| Integration | What it unlocks | Where to get a key |
 |---|---|---|
-| Anthropic | Meilleur LLM généraliste (Claude) | https://console.anthropic.com |
-| OpenAI | GPT-4o, images DALL·E, Whisper | https://platform.openai.com |
-| Groq | Offre gratuite, LLM ultra-rapide | https://console.groq.com |
-| xAI (Grok) | Modèles Grok | https://x.ai/api |
-| Mistral AI | Modèles Mistral (open source + propriétaires) | https://console.mistral.ai |
-| OpenRouter | Accès à des centaines de modèles via une seule API | https://openrouter.ai |
-| ElevenLabs | Voix premium (Jarvis parle mieux) | https://elevenlabs.io |
-| GoHighLevel | CRM, contacts, SMS, workflows | Votre sous-compte GHL → Paramètres → Jeton d'intégration privée |
-| Spotify | Contrôle musical via Jarvis | https://developer.spotify.com |
-| Slack | Canal de notifications | Paramètres du workspace → Apps → Incoming Webhooks |
+| Anthropic | Best general LLM (Claude) | https://console.anthropic.com |
+| OpenAI | GPT-4o, DALL·E images, Whisper | https://platform.openai.com |
+| Groq | Free tier, ultra-fast LLM | https://console.groq.com |
+| ElevenLabs | Premium voice (Jarvis speaks better) | https://elevenlabs.io |
+| GoHighLevel | CRM, contacts, SMS, workflows | Your GHL sub-account → Settings → Private Integration Token |
+| Spotify | Music control via Jarvis | https://developer.spotify.com |
+| Slack | Notifications channel | Workspace settings → Apps → Incoming Webhooks |
 
-**Aucune n'est requise.** Avec une seule clé LLM (ou Ollama en local), tout le
-stack fonctionne.
+**None are required.** With just one LLM key (or Ollama running locally), the
+whole stack works.
 
 ---
 
-## Sécurité et confidentialité
+## Security & privacy
 
-- **Les trois services se lient uniquement à `127.0.0.1`.** Personne sur votre
-  réseau ou sur Internet ne peut les atteindre. Ne changez pas cela sauf si
-  vous savez exactement ce que vous faites.
-- **Protection d'en-tête Host** intégrée — bloque les attaques de DNS-rebinding
-  même sur la machine locale.
-- **Zéro télémétrie** — pas d'analytics, pas de phone-home, pas de suivi
-  d'utilisation. Le seul trafic réseau sortant est constitué des appels API que
-  VOUS configurez (par ex. quand Jarvis appelle Anthropic ou récupère un
-  contact GHL).
-- **Vos données restent sur votre machine.** La mémoire du brain vit dans
-  `neurolinked-brain/brain_state/` — de purs fichiers JSON locaux. L'historique
-  de chat Jarvis vit dans `ops-center/_jarvis/sessions/` — même principe.
+- **All three services bind to `127.0.0.1` only.** Nobody on your network or
+  the internet can reach them. Don't change this unless you know exactly
+  what you're doing.
+- **Host-header guard** built in — blocks DNS-rebinding attacks even on
+  the local machine.
+- **Zero telemetry** — no analytics, no phone-home, no usage tracking.
+  The only outbound network traffic is the API calls YOU configure
+  (e.g., when Jarvis calls Anthropic, or pulls a GHL contact).
+- **Your data stays on your machine.** Brain memory lives in
+  `neurolinked-brain/brain_state/` — pure local JSON files. Jarvis chat
+  history lives in `ops-center/_jarvis/sessions/` — same deal.
 
 ---
 
-## Dépannage
+## Troubleshooting
 
-**« Python n'est pas installé ou pas dans le PATH »**
-Réinstallez Python depuis python.org et **assurez-vous de cocher la case
-« Add Python to PATH »** lors de l'installation. Puis relancez `START.bat`.
+**"Python is not installed or not in PATH"**
+Re-install Python from python.org and **make sure to check the
+"Add Python to PATH" box** during install. Then try `START.bat` again.
 
-**Un des services refuse de démarrer**
-Ouvrez la fenêtre de terminal minimisée pour ce service (Brain / Jarvis /
-OpsCenter dans votre barre des tâches). Lisez l'erreur. Causes les plus
-courantes :
-- Port déjà utilisé → exécutez `STOP.bat`, attendez 5 secondes, puis `START.bat` à nouveau
-- Paquet Python manquant → exécutez manuellement :
+**One of the services fails to start**
+Open the minimized terminal window for that service (Brain / Jarvis /
+OpsCenter on your taskbar). Read the error. Most common causes:
+- Port already in use → run `STOP.bat`, wait 5 seconds, then `START.bat` again
+- Missing Python package → manually run:
   `python -m pip install --user fastapi uvicorn websockets httpx pyyaml anthropic openai groq cryptography`
 
-**Jarvis ne m'entend pas**
-Ouvrez `localhost:8340` directement dans Chrome. Chrome demandera la
-permission du micro — cliquez Autoriser. Si vous l'avez précédemment refusée,
-cliquez sur l'icône caméra/micro dans la barre d'adresse → réinitialisez les
-permissions.
+**Jarvis can't hear me**
+Open `localhost:8340` directly in Chrome. Chrome will prompt for mic
+permission — click Allow. If you previously denied it, click the
+camera/mic icon in the address bar → reset permissions.
 
-**« J'ai ajouté une clé API mais rien ne se passe »**
-- Rafraîchissez le tableau de bord
-- Vérifiez la fenêtre de terminal du service concerné — les erreurs s'y affichent
-- Assurez-vous que votre clé est valide en la testant sur le playground du fournisseur
+**"I added an API key but nothing happens"**
+- Refresh the dashboard
+- Check the terminal window for the relevant service — errors print there
+- Make sure your key is valid by testing it on the provider's playground
 
-**Le tableau de bord du brain à `localhost:8020` est vide**
-C'est normal au premier démarrage. Le cerveau apprend au fur et à mesure de
-votre utilisation. Lancez quelques agents, ayez quelques conversations avec
-Jarvis, puis revenez vérifier dans une journée.
+**The brain dashboard at `localhost:8020` is empty**
+That's normal on first boot. The brain learns as you use it. Run a few
+agents, have a few Jarvis conversations, then check back in a day.
 
-**Je veux tout effacer et recommencer**
-Supprimez `neurolinked-brain/brain_state/` et `ops-center/_jarvis/sessions/`.
-Au prochain démarrage, tout s'initialisera à zéro.
+**I want to wipe it and start over**
+Delete `neurolinked-brain/brain_state/` and `ops-center/_jarvis/sessions/`.
+Next start it'll initialize fresh.
 
 ---
 
-## Ce que ce n'est PAS
+## What this ISN'T
 
-- **Pas un produit successeur.** Le mainteneur a construit un produit
-  successeur avec un constructeur visuel d'agents, des jobs planifiés, un flux
-  en temps réel, des managers par rôle et une UI soignée. Ceci est le
-  prédécesseur — une v1 plus simple qui préexiste à tout cela. Ça fonctionne
-  pour un usage personnel et de petites ops ; ce n'est pas testé en condition
-  réelle pour des équipes.
-- **Pas multi-utilisateur.** Une personne, une machine. Pas de connexion, pas
-  de permissions.
-- **Pas supporté.** Les forks sont bienvenus. Les pull requests sont les
-  bienvenues (s'il y a un repo public). Les rapports de bugs — débrouillez-
-  vous, corrigez, partagez le correctif.
+- **Not a successor product.** the maintainer built a successor product with
+  a visual agent builder, scheduled jobs, real-time live feed, role-based
+  managers, and a polished UI. This is the predecessor — a simpler v1 that
+  predates all that. It works for personal use and small ops; it's not
+  battle-tested for teams.
+- **Not multi-user.** One person, one machine. No login, no permissions.
+- **Not supported.** Forks welcome. Pull requests welcome (if there's a
+  public repo). Bug reports — figure it out, fix it, share the fix.
 
 ---
 
-## Licence
+## License
 
-MIT. Faites ce que vous voulez avec.
+MIT. Do whatever you want with it.
 
 ---
 
-## Héritage
+## Heritage
 
-C'est ce que nous utilisions chez le mainteneur en 2025-2026 avant de construire
-le successeur. Ça a alimenté nos opérations quotidiennes — préparation de
-réunions, revue financière, routage de leads, rédaction de contenu. Les agents
-pré-installés sont de vrais agents que nous exécutions. Le brain est le vrai
-modèle de mémoire neuromorphique. Le Jarvis est le vrai assistant vocal.
+This is what we used at the maintainer in 2025-2026 before we built the
+successor. It powered our actual daily ops — meeting prep, finance
+review, lead routing, content drafting. The pre-installed agents are
+real ones we ran. The brain is the actual neuromorphic memory model.
+The Jarvis is the actual voice assistant.
 
-Nous l'avons dépassé car nous avions besoin de multi-utilisateur, de jobs
-planifiés et d'un constructeur visuel. **Vous n'avez probablement besoin d'aucun
-de cela.** Cette v1 est largement suffisante pour un solopreneur ou une petite
-équipe gérant ses propres opérations.
+We outgrew it because we needed multi-user, scheduled jobs, and a
+visual builder. **You probably don't need any of that.** This v1 is
+plenty for a solopreneur or small team running their own ops.
 
-Prenez-le. Lancez-le. Faites-le vôtre. Si ça vous aide à livrer — c'était
-tout le but de sa publication.
+Take it. Run it. Make it yours. If it helps you ship — that was the
+whole point of releasing it.
 
-— le mainteneur
+— the maintainer
+# jar
