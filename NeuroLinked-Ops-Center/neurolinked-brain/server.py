@@ -16,6 +16,10 @@ import time
 os.environ.setdefault("NO_PROXY", "localhost,127.0.0.1,0.0.0.0")
 os.environ.setdefault("no_proxy", "localhost,127.0.0.1,0.0.0.0")
 
+# LAN Mode — accès réseau local (activé par LAN_MODE=1)
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from lan_utils import get_allowed_hosts, get_allowed_origins, LAN_IP, LAN_MODE
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
@@ -59,12 +63,10 @@ try:
 except Exception as _e:
     print(f"[brain] WARN: could not publish token file: {_e}")
 
-_ALLOWED_HTTP_ORIGINS = [
-    "http://localhost:8010", "http://127.0.0.1:8010",
-    "http://localhost:8020", "http://127.0.0.1:8020",
-    "http://localhost:8340", "http://127.0.0.1:8340",
-]
-_ALLOWED_HOSTS = {"localhost", "127.0.0.1", "[::1]"}
+_ALLOWED_HTTP_ORIGINS = list(get_allowed_origins())
+_ALLOWED_HOSTS = get_allowed_hosts()
+if LAN_MODE:
+    print(f"[brain] Mode LAN activé — accessible sur http://{LAN_IP}:8020")
 
 # Open paths skip token enforcement so the dashboard HTML can bootstrap.
 _TOKEN_OPEN_PATHS = {"/", "/index.html"}
@@ -72,7 +74,7 @@ _TOKEN_OPEN_PREFIXES = ("/static/", "/dashboard/")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_ALLOWED_HTTP_ORIGINS,
+    allow_origins=list(get_allowed_origins()),
     allow_methods=["*"],
     allow_headers=["*"],
     allow_credentials=False,

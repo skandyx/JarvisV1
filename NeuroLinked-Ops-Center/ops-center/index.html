@@ -166,8 +166,8 @@
     </div>
     <div class="status-pills">
       <span class="pill red"><span class="dot"></span>LIVE</span>
-      <span class="pill"><span class="dot"></span>Z.E.R.O. :8340</span>
-      <span class="pill purple"><span class="dot"></span>BRAIN :8020</span>
+      <a class="pill" id="jarvis-pill" href="#" target="_blank" title="Ouvrir le chat avec Z.E.R.O. / Jarvis" style="text-decoration:none;cursor:pointer"><span class="dot"></span>Z.E.R.O. :8340</a>
+      <a class="pill purple" id="brain-pill" href="#" target="_blank" title="Ouvrir le Brain" style="text-decoration:none;cursor:pointer"><span class="dot"></span>BRAIN :8020</a>
       <span class="pill" id="sec-pill" title="Click for details"><span class="dot"></span>127.0.0.1 LOCKED</span>
     </div>
   </div>
@@ -186,7 +186,7 @@
         <div class="note">Click once to enable audio, then say "Hey Zero" or tap SPACE. He stays active 10 seconds, then drops back to passive listening.</div>
       </div>
       <div class="actions">
-        <a class="btn" href="http://localhost:8340" target="_blank">Pop out</a>
+        <a class="btn" id="jarvis-popout" href="#" target="_blank">Pop out</a>
       </div>
     </div>
     <iframe id="jarvis-frame" class="embed embed-jarvis" src="/zero" allow="microphone; camera; autoplay; clipboard-read; clipboard-write"></iframe>
@@ -200,10 +200,10 @@
         <div class="note" id="brain-note">10k neurons · AES-256 · watches, learns, indexes</div>
       </div>
       <div class="actions">
-        <a class="btn" href="http://localhost:8020" target="_blank">Pop out</a>
+        <a class="btn" id="brain-popout" href="#" target="_blank">Pop out</a>
       </div>
     </div>
-    <iframe id="brain-frame" class="embed embed-brain" src="http://localhost:8020" allow="microphone; camera; autoplay"></iframe>
+    <iframe id="brain-frame" class="embed embed-brain" src="" allow="microphone; camera; autoplay"></iframe>
     <div class="section-body" style="border-top:1px solid var(--line)">
       <label class="lbl">Ask the brain (searches your knowledge base)</label>
       <div class="query-row">
@@ -977,6 +977,61 @@ document.querySelector('.foot').textContent = 'NeuroLinked Ops Center · Operati
             }
         }
     });
+})();
+</script>
+<!-- Chat avec Jarvis — bouton flottant -->
+<a id="jarvis-chat-btn" href="#" target="_blank" title="Ouvrir le chat avec Jarvis" style="
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+    color: #fff;
+    font-size: 24px;
+    text-decoration: none;
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+" onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 6px 30px rgba(0,212,255,0.6)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 20px rgba(0,212,255,0.4)';">
+    🤖
+</a>
+
+<script>
+// Make all Jarvis/Brain links work in LAN mode too — use current hostname
+// instead of hardcoded localhost so the links work from other devices.
+(function() {
+    var proto = window.location.protocol;
+    var host  = window.location.hostname;
+    var jarvisUrl = proto + '//' + host + ':8340';
+    var brainUrl  = proto + '//' + host + ':8020';
+
+    // Floating "Chat avec Jarvis" button
+    var chatBtn = document.getElementById('jarvis-chat-btn');
+    if (chatBtn) chatBtn.href = jarvisUrl;
+
+    // Top-bar pills (clickable links)
+    var jarvisPill = document.getElementById('jarvis-pill');
+    if (jarvisPill) jarvisPill.href = jarvisUrl;
+
+    var brainPill = document.getElementById('brain-pill');
+    if (brainPill) brainPill.href = brainUrl;
+
+    // "Pop out" buttons in section headers
+    var jarvisPopout = document.getElementById('jarvis-popout');
+    if (jarvisPopout) jarvisPopout.href = jarvisUrl;
+
+    var brainPopout = document.getElementById('brain-popout');
+    if (brainPopout) brainPopout.href = brainUrl;
+
+    // Brain iframe src (was hardcoded to localhost:8020)
+    var brainFrame = document.getElementById('brain-frame');
+    if (brainFrame) brainFrame.src = brainUrl;
 })();
 </script>
 </body>

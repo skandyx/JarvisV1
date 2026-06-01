@@ -194,16 +194,43 @@
                     <label class="settings-field">
                         <span>Mode vocal</span>
                         <select id="s-tts_provider">
-                            <option value="auto">Auto (voix navigateur gratuite sauf si ElevenLabs configuré)</option>
-                            <option value="browser">Navigateur (gratuit, intégré)</option>
-                            <option value="elevenlabs">ElevenLabs (premium, nécessite une clé)</option>
+                            <option value="auto">Auto (Edge TTS gratuit, puis navigateur)</option>
+                            <option value="browser">Navigateur (gratuit, intégré, hors-ligne)</option>
+                            <option value="edge_tts">Edge TTS (gratuit, haute qualité, via Microsoft)</option>
+                            <option value="piper">Piper TTS (100% hors-ligne, nécessite un modèle)</option>
+                            <option value="elevenlabs">ElevenLabs (premium, nécessite une clé API)</option>
                         </select>
                     </label>
-                    <label class="settings-field">
+                    <label class="settings-field" data-tts-provider="edge_tts">
+                        <span>Voix Edge TTS</span>
+                        <select id="s-edge_voice">
+                            <option value="en-US-GuyNeural">Guy (anglais, masculin — défaut)</option>
+                            <option value="en-US-AvaNeural">Ava (anglais, féminine)</option>
+                            <option value="en-US-AndrewNeural">Andrew (anglais, masculin)</option>
+                            <option value="en-US-EmmaNeural">Emma (anglais, féminine)</option>
+                            <option value="en-US-JennyNeural">Jenny (anglais, féminine)</option>
+                            <option value="en-US-BrianNeural">Brian (anglais, masculin)</option>
+                            <option value="en-US-AriaNeural">Aria (anglais, féminine)</option>
+                            <option value="en-US-DavisNeural">Davis (anglais, masculin)</option>
+                            <option value="fr-FR-DeniseNeural">Denise (français, féminine)</option>
+                            <option value="fr-FR-HenriNeural">Henri (français, masculin)</option>
+                            <option value="fr-FR-VivienneMultilingualNeural">Vivienne (français, multilingue)</option>
+                            <option value="fr-FR-AloisNeural">Alois (français, masculin)</option>
+                            <option value="fr-FR-EloiNeural">Eloi (français, masculin)</option>
+                            <option value="fr-FR-JeanNeural">Jean (français, masculin)</option>
+                            <option value="fr-FR-CelineNeural">Céline (français, féminine)</option>
+                            <option value="fr-FR-JosephineNeural">Joséphine (français, féminine)</option>
+                        </select>
+                    </label>
+                    <label class="settings-field" data-tts-provider="piper">
+                        <span>Modèle Piper</span>
+                        <input id="s-piper_model" type="text" placeholder="ex : fr_FR-upmc-medium">
+                    </label>
+                    <label class="settings-field" data-tts-provider="elevenlabs">
                         <span>Clé ElevenLabs</span>
                         <input id="s-elevenlabs_api_key" type="password" placeholder="sk_...">
                     </label>
-                    <label class="settings-field">
+                    <label class="settings-field" data-tts-provider="elevenlabs">
                         <span>ID voix ElevenLabs</span>
                         <input id="s-elevenlabs_voice_id" type="text" placeholder="ex : EXAVITQu4vr4xnSDxMaL">
                     </label>

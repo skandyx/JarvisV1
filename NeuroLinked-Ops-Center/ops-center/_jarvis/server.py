@@ -27,6 +27,10 @@ try:
 except Exception:
     pass
 
+# LAN Mode — accès réseau local (activé par LAN_MODE=1)
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+from lan_utils import get_allowed_hosts, get_allowed_origins, get_bind_host, LAN_IP, LAN_MODE
+
 import anthropic
 import httpx
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -81,10 +85,7 @@ app = FastAPI()
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8010", "http://127.0.0.1:8010",
-        "http://localhost:8340", "http://127.0.0.1:8340",
-    ],
+    allow_origins=list(get_allowed_origins()),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -116,12 +117,10 @@ import secrets as _secrets
 LAUNCH_TOKEN = (os.environ.get("NEUROLINKED_TOKEN") or _secrets.token_urlsafe(32)).strip()
 print(f"[jarvis] launch token armed (len={len(LAUNCH_TOKEN)})", flush=True)
 
-_ALLOWED_HTTP_ORIGINS = {
-    "http://localhost:8010", "http://127.0.0.1:8010",
-    "http://localhost:8020", "http://127.0.0.1:8020",
-    "http://localhost:8340", "http://127.0.0.1:8340",
-}
-_ALLOWED_HOSTS = {"localhost", "127.0.0.1", "[::1]"}
+_ALLOWED_HTTP_ORIGINS = get_allowed_origins()
+_ALLOWED_HOSTS = get_allowed_hosts()
+if LAN_MODE:
+    print(f"[jarvis] Mode LAN activé — accessible sur http://{LAN_IP}:8340")
 
 # Endpoints that DON'T require the launch token. These are the bare minimum
 # the browser needs to bootstrap before it can authenticate anything else.
@@ -267,6 +266,26 @@ try:
         print("[jarvis] GoHighLevel: not configured (paste Location ID + API Key in gear icon)", flush=True)
 except Exception as _e:
     print(f"[jarvis] GoHighLevel init error: {_e}", flush=True)
+
+# Local TTS integrations — free alternatives to ElevenLabs
+try:
+    from integrations import edge_tts_local
+    if edge_tts_local.is_available():
+        print("[jarvis] Edge TTS: disponible (gratuit, haute qualité)", flush=True)
+    else:
+        print("[jarvis] Edge TTS: module non installé (pip install edge-tts)", flush=True)
+except Exception as _e:
+    print(f"[jarvis] edge_tts_local unavailable: {_e}", flush=True)
+    edge_tts_local = None
+try:
+    from integrations import piper_tts_local
+    if piper_tts_local.is_available():
+        print(f"[jarvis] Piper TTS: disponible ({len(piper_tts_local.list_models())} modèle(s))", flush=True)
+    else:
+        print("[jarvis] Piper TTS: non disponible (pip install piper-tts + modèles requis)", flush=True)
+except Exception as _e:
+    print(f"[jarvis] piper_tts_local unavailable: {_e}", flush=True)
+    piper_tts_local = None
 
 # Auto-connect to NeuroLinked Brain. The brain IS Jarvis's memory + thinking
 # substrate, so we ALWAYS try to connect — even if config disables it. The
@@ -1781,23 +1800,111 @@ def get_system_prompt(session_id: str | None = None):
     return build_system_prompt(session_id=session_id).replace("{time}", time.strftime("%H:%M"))
 
 
-async def synthesize_speech(text: str, voice_id: str = None, voice_settings: dict = None) -> bytes:
-    """Synthesize speech via ElevenLabs. Optional voice_id overrides the default (Jarvis).
-    voice_settings lets callers tune stability/similarity per-voice; defaults to Jarvis settings.
+async def synthesize_speech(text: str, voice_id: str = None, voice_settings: dict = None) -> tuple[bytes, str]:
+    """Synthesize speech via the configured TTS provider.
 
-    If ElevenLabs is not configured, returns an empty bytes object. The frontend
-    detects the empty audio payload and falls back to the browser's built-in
-    SpeechSynthesis API — so every member gets a free working voice out of the box,
-    and premium ElevenLabs voice is an opt-in upgrade via the Settings UI."""
+    Returns (audio_bytes, audio_format) where audio_format is 'mp3' or 'wav'.
+    If no audio is produced (browser fallback), returns (b"", "").
+
+    Supported providers:
+      - "browser"   : no server-side TTS, frontend uses SpeechSynthesis
+      - "edge_tts"  : free Microsoft Edge TTS (no API key needed, outputs MP3)
+      - "piper"     : 100% offline Piper TTS (requires models, outputs WAV)
+      - "elevenlabs": premium ElevenLabs API (requires key, outputs MP3)
+      - "auto"      : try edge_tts first (free), then fall back to browser
+    """
     if not text.strip():
-        return b""
+        return b"", ""
 
-    # Free voice path: no ElevenLabs key OR user has disabled premium voice.
-    # Frontend speaks the text using browser-native SpeechSynthesis.
+    provider = (config.get("tts_provider") or "auto").lower()
+
+    # ---- Browser: no server audio, frontend handles it ----
+    if provider == "browser":
+        return b"", ""
+
+    # ---- Edge TTS (free, high quality, no API key) ----
+    if provider in ("edge_tts", "local_edge"):
+        if edge_tts_local:
+            edge_voice = config.get("edge_voice", "") or voice_id or "en-US-GuyNeural"
+            try:
+                result = await asyncio.get_event_loop().run_in_executor(
+                    None, edge_tts_local.synthesize, text, edge_voice
+                )
+                if result.get("ok"):
+                    audio_path = result["path"]
+                    audio_fmt = result.get("format", "mp3")
+                    try:
+                        with open(audio_path, "rb") as f:
+                            audio = f.read()
+                        return audio, audio_fmt
+                    finally:
+                        try: os.unlink(audio_path)
+                        except: pass
+                else:
+                    print(f"[jarvis] Edge TTS error: {result.get('error', '?')}", flush=True)
+            except Exception as e:
+                print(f"[jarvis] Edge TTS exception: {e}", flush=True)
+        # Fallback to browser if edge_tts fails
+        print("[jarvis] Edge TTS indisponible, repli navigateur", flush=True)
+        return b"", ""
+
+    # ---- Piper TTS (100% offline, requires models) ----
+    if provider in ("piper", "local_piper"):
+        if piper_tts_local:
+            piper_model = config.get("piper_model", "") or voice_id or ""
+            try:
+                result = await asyncio.get_event_loop().run_in_executor(
+                    None, piper_tts_local.synthesize, text, piper_model
+                )
+                if result.get("ok"):
+                    audio_path = result["path"]
+                    audio_fmt = result.get("format", "wav")
+                    try:
+                        with open(audio_path, "rb") as f:
+                            audio = f.read()
+                        return audio, audio_fmt
+                    finally:
+                        try: os.unlink(audio_path)
+                        except: pass
+                else:
+                    print(f"[jarvis] Piper TTS error: {result.get('error', '?')}", flush=True)
+            except Exception as e:
+                print(f"[jarvis] Piper TTS exception: {e}", flush=True)
+        # Fallback to browser if piper fails
+        print("[jarvis] Piper TTS indisponible, repli navigateur", flush=True)
+        return b"", ""
+
+    # ---- Auto: try edge_tts first (free), then browser ----
+    if provider == "auto":
+        if edge_tts_local and edge_tts_local.is_available():
+            edge_voice = config.get("edge_voice", "") or voice_id or "en-US-GuyNeural"
+            try:
+                result = await asyncio.get_event_loop().run_in_executor(
+                    None, edge_tts_local.synthesize, text, edge_voice
+                )
+                if result.get("ok"):
+                    audio_path = result["path"]
+                    audio_fmt = result.get("format", "mp3")
+                    try:
+                        with open(audio_path, "rb") as f:
+                            audio = f.read()
+                        return audio, audio_fmt
+                    finally:
+                        try: os.unlink(audio_path)
+                        except: pass
+                else:
+                    print(f"[jarvis] Auto TTS: edge_tts failed ({result.get('error', '?')}), trying ElevenLabs...", flush=True)
+            except Exception as e:
+                print(f"[jarvis] Auto TTS: edge_tts exception ({e}), trying ElevenLabs...", flush=True)
+        # Fall through to ElevenLabs if configured
+        if ELEVENLABS_API_KEY and (voice_id or ELEVENLABS_VOICE_ID):
+            pass  # continue to ElevenLabs below
+        else:
+            return b"", ""
+
+    # ---- ElevenLabs (premium, requires API key) ----
     if not ELEVENLABS_API_KEY or not (voice_id or ELEVENLABS_VOICE_ID):
-        return b""
-    if (config.get("tts_provider") or "").lower() == "browser":
-        return b""
+        return b"", ""
 
     vid = voice_id or ELEVENLABS_VOICE_ID
     settings = voice_settings or {"stability": 0.5, "similarity_boost": 0.85}
@@ -1839,7 +1946,7 @@ async def synthesize_speech(text: str, voice_id: str = None, voice_settings: dic
         except Exception as e:
             print(f"  TTS EXCEPTION: {e}", flush=True)
 
-    return b"".join(audio_parts)
+    return b"".join(audio_parts), "mp3"
 
 
 async def consult_brain(question: str) -> str:
@@ -2320,12 +2427,13 @@ async def _speak(ws, text: str, source: str = "jarvis", voice_id: str = None, vo
     """Helper: synthesize + send a response message over the websocket."""
     if not text or not text.strip():
         return
-    audio = await synthesize_speech(text, voice_id=voice_id, voice_settings=voice_settings)
+    audio, audio_fmt = await synthesize_speech(text, voice_id=voice_id, voice_settings=voice_settings)
     await ws.send_json({
         "type": "response",
         "source": source,
         "text": text,
         "audio": base64.b64encode(audio).decode("utf-8") if audio else "",
+        "audio_format": audio_fmt or "",
     })
 
 
@@ -2978,6 +3086,7 @@ _SETTINGS_EDITABLE = {
     "mistral_api_key", "openrouter_api_key", "zai_api_key",
     # TTS
     "tts_provider",
+    "edge_voice", "piper_model",
     "elevenlabs_api_key", "elevenlabs_voice_id", "brain_voice_id",
     # Personnel
     "user_name", "user_address", "city",
@@ -3009,6 +3118,8 @@ async def get_settings():
     out["llm_active"] = getattr(llm, "name", None)
     out["llm_active_model"] = getattr(llm, "model", None)
     out["elevenlabs_configured"] = bool(ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID)
+    out["edge_tts_available"] = edge_tts_local.is_available() if edge_tts_local else False
+    out["piper_available"] = piper_tts_local.is_available() if piper_tts_local else False
     return out
 
 @app.post("/api/settings")
@@ -3069,7 +3180,25 @@ async def set_settings(payload: dict):
         "llm_active": getattr(llm, "name", None),
         "llm_active_model": getattr(llm, "model", None),
         "elevenlabs_configured": bool(ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID),
+        "edge_tts_available": edge_tts_local.is_available() if edge_tts_local else False,
+        "piper_available": piper_tts_local.is_available() if piper_tts_local else False,
     }
+
+
+# ============================================================================
+#   API TTS — listage des voix disponibles par fournisseur
+# ============================================================================
+
+@app.get("/api/tts/voices")
+async def tts_voices():
+    """Retourne les voix disponibles pour le fournisseur TTS actif."""
+    provider = config.get("tts_provider", "auto")
+    voices = []
+    if provider in ("edge_tts", "local_edge", "auto") and edge_tts_local:
+        voices.extend([{"id": v["id"], "name": v["name"], "lang": v.get("lang", ""), "provider": "edge_tts"} for v in edge_tts_local.list_voices()])
+    if provider in ("piper", "local_piper") and piper_tts_local:
+        voices.extend([{"id": m["id"], "name": m["name"], "provider": "piper"} for m in piper_tts_local.list_models()])
+    return {"voices": voices, "provider": provider}
 
 
 # ============================================================================
@@ -3243,6 +3372,8 @@ async def health():
         },
         "tts": {
             "elevenlabs": bool(ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID),
+            "edge_tts": edge_tts_local.is_available() if edge_tts_local else False,
+            "piper": piper_tts_local.is_available() if piper_tts_local else False,
             "provider_pref": config.get("tts_provider", "auto"),
         },
         "neurolink": nl,
@@ -3292,6 +3423,10 @@ async def cortex_status():
     aux_config     = ok("config.json loaded")
     aux_elevenlabs = ok("elevenlabs key + voice set") if (ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID) \
                      else bad("no elevenlabs key/voice — TTS will use browser voice")
+    aux_edge_tts   = ok("edge-tts installé et prêt (gratuit)") if (edge_tts_local and edge_tts_local.is_available()) \
+                     else bad("edge-tts non installé — pip install edge-tts")
+    aux_piper      = ok("piper installé avec modèles (hors-ligne)") if (piper_tts_local and piper_tts_local.is_available()) \
+                     else bad("piper non installé ou sans modèle")
 
     # web = can we drive a browser? playwright + chromium presence.
     if browser_tools:
@@ -3318,6 +3453,8 @@ async def cortex_status():
     aux = {
         "config":     aux_config,
         "elevenlabs": aux_elevenlabs,
+        "edge_tts":   aux_edge_tts,
+        "piper":      aux_piper,
         "web":        aux_web,
     }
     overall_ok = all(v.get("ok") for v in cortexes.values()) and all(v.get("ok") for v in aux.values())
@@ -3350,4 +3487,4 @@ if __name__ == "__main__":
     # If you ever want to access Jarvis from another device on your network, change
     # the host below to "0.0.0.0" and open port 8340 in your firewall â€” but know
     # that also exposes the API keys via WebSocket responses.
-    uvicorn.run(app, host="127.0.0.1", port=8340)
+    uvicorn.run(app, host=get_bind_host(), port=8340)

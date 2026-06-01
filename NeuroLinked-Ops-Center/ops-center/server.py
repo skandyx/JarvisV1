@@ -32,6 +32,10 @@ from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 os.environ.setdefault("NO_PROXY", "localhost,127.0.0.1,0.0.0.0")
 os.environ.setdefault("no_proxy", "localhost,127.0.0.1,0.0.0.0")
 
+# LAN Mode — accès réseau local (activé par LAN_MODE=1)
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from lan_utils import get_allowed_hosts, get_allowed_origins, get_bind_host, LAN_IP, LAN_MODE
+
 # Windows default console codec (cp1252) can't encode the Unicode arrows/em-dashes
 # used in log lines — force UTF-8 so startup doesn't crash.
 try:
@@ -3111,14 +3115,12 @@ def create_event(title: str, start_iso: str, duration_min: int = 30) -> dict:
 # HTTP HANDLER
 # --------------------------------------------------------------------------
 
-_ALLOWED_ORIGINS = {
-    "http://localhost:8010","http://127.0.0.1:8010",
-    "http://localhost:8340","http://127.0.0.1:8340",
-    "http://localhost:8020","http://127.0.0.1:8020",
-}
+_ALLOWED_ORIGINS = get_allowed_origins()
 # DNS-rebinding defense: only accept requests whose Host header is a
 # local-loopback alias.
-_ALLOWED_HOSTS = {"localhost", "127.0.0.1", "[::1]"}
+_ALLOWED_HOSTS = get_allowed_hosts()
+if LAN_MODE:
+    print(f"[ops-center] Mode LAN activé — accessible sur http://{LAN_IP}:8010")
 
 # Per-startup launch token. Anything hitting /api/* must present it. The
 # dashboard HTML embeds it for the same-origin frontend on first load.
@@ -3179,7 +3181,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(data)))
         # CORS: only allow localhost origins (defense-in-depth on top of 127.0.0.1 bind).
         origin = self.headers.get("Origin", "")
-        if origin in ("http://localhost:8010","http://127.0.0.1:8010","http://localhost:8340","http://127.0.0.1:8340","http://localhost:8020","http://127.0.0.1:8020"):
+        if origin in get_allowed_origins():
             self.send_header("Access-Control-Allow-Origin", origin)
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "SAMEORIGIN")
@@ -4094,9 +4096,9 @@ class Handler(BaseHTTPRequestHandler):
 
         if p == "/api/security/status":
             self._send(200, {
-                "bind_address": "127.0.0.1",
-                "lan_blocked": True,
-                "reachable_from": "this machine only",
+                "bind_address": get_bind_host(),
+                "lan_blocked": not LAN_MODE,
+                "reachable_from": f"LAN ({LAN_IP}) + localhost" if LAN_MODE else "this machine only",
                 "vault_encryption": "Fernet (AES-128-CBC + HMAC-SHA256)",
                 "vault_location": str(VAULT_FILE),
                 "ports": {"ops": 8010, "brain": 8020, "jarvis": 8340},
@@ -4198,7 +4200,7 @@ def main():
     # This is the fix for the breach where a phone on the WiFi hit :8010.
     # ThreadingHTTPServer so the SSE event stream (long-lived /api/events/stream)
     # doesn't block other requests. The handler is otherwise stateless.
-    srv = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
+    srv = ThreadingHTTPServer((get_bind_host(), PORT), Handler)
     srv.daemon_threads = True
 
     # Boot the agent scheduler. Reads each agent's `schedule:` field and

@@ -1243,7 +1243,8 @@ function connect() {
             }
             addTranscript(source === 'brain' ? 'brain' : 'jarvis', data.text);
             if (data.audio && data.audio.length > 0) {
-                queueAudio(data.audio, source);
+                const audioFmt = data.audio_format || 'mp3';
+                queueAudio(data.audio, source, audioFmt);
             } else if (data.text && data.text.trim()) {
                 // No audio came back (user chose browser TTS, OR ElevenLabs
                 // failed — e.g. quota exhausted). Speak via the browser's
@@ -1309,8 +1310,8 @@ function speakViaBrowser(text, source = 'jarvis') {
     }
 }
 
-function queueAudio(b64, source = 'jarvis') {
-    audioQueue.push({ b64, source });
+function queueAudio(b64, source = 'jarvis', audioFormat = 'mp3') {
+    audioQueue.push({ b64, source, audioFormat });
     if (!isPlaying) playNext();
 }
 
@@ -1334,7 +1335,9 @@ function playNext() {
     liveTranscript.textContent = '';
     const b64 = item.b64;
     const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-    const blob = new Blob([bytes], { type: 'audio/mpeg' });
+    const fmt = item.audioFormat || 'mp3';
+    const mimeType = fmt === 'wav' ? 'audio/wav' : 'audio/mpeg';
+    const blob = new Blob([bytes], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
     audio.crossOrigin = 'anonymous';

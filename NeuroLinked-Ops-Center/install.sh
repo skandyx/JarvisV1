@@ -63,7 +63,7 @@ echo ""
 echo -e "${YELLOW}[3/6]${NC} Installation des dépendances principales..."
 echo "       fastapi, uvicorn, websockets, httpx, anthropic, openai, groq..."
 $PIP_CMD install --quiet --upgrade pip 2>/dev/null || true
-$PIP_CMD install --quiet fastapi "uvicorn[standard]" websockets httpx pyyaml anthropic openai groq psutil cryptography pillow numpy python-multipart 2>/dev/null
+$PIP_CMD install --quiet fastapi "uvicorn[standard]" websockets httpx pyyaml anthropic openai groq psutil cryptography pillow numpy python-multipart edge-tts 2>/dev/null
 echo "       Dépendances principales installées."
 
 # ---- Step 4: Install Brain dependencies ----

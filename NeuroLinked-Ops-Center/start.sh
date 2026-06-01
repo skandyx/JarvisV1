@@ -2,6 +2,10 @@
 # ==============================================================================
 #   NeuroLinked Ops Center — Démarrage des trois services (Linux/macOS)
 #   Brain (8020), Jarvis (8340), Ops Center (8010)
+#
+#   Usage :
+#     ./start.sh          # Mode localhost (127.0.0.1 uniquement)
+#     ./start.sh --lan    # Mode LAN (0.0.0.0, accessible depuis le réseau)
 # ==============================================================================
 
 CYAN='\033[0;36m'
@@ -13,6 +17,22 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 VENV_DIR="$SCRIPT_DIR/.venv"
 LOG_DIR="$SCRIPT_DIR/logs"
+
+# ---- Parse --lan flag ----
+LAN_FLAG=0
+for arg in "$@"; do
+    case "$arg" in
+        --lan) LAN_FLAG=1 ;;
+    esac
+done
+
+if [ "$LAN_FLAG" -eq 1 ]; then
+    export LAN_MODE=1
+    LAN_HOST=$(python3 -c "import sys; sys.path.insert(0,'$SCRIPT_DIR'); from lan_utils import LAN_IP; print(LAN_IP)")
+else
+    unset LAN_MODE 2>/dev/null || true
+    LAN_HOST=""
+fi
 
 # Vérifier que l'installation a été faite
 if [ ! -d "$VENV_DIR" ]; then
@@ -43,12 +63,17 @@ echo ""
 echo -e "${CYAN} ============================================${NC}"
 echo -e "${CYAN}  NEUROLINKED OPS CENTER — DÉMARRAGE${NC}"
 echo -e "${CYAN} ============================================${NC}"
+if [ "$LAN_FLAG" -eq 1 ]; then
+    echo -e "${YELLOW}  Mode LAN activé (LAN_MODE=1)${NC}"
+    echo -e "${YELLOW}  IP LAN détectée : ${LAN_HOST}${NC}"
+fi
 echo ""
 
 # ---- Lancer le Brain (port 8020) ----
-echo -e "${YELLOW}🧠${NC} Lancement du Brain (port 8020)..."
+BRAIN_BIND_HOST=$(python3 -c "import sys; sys.path.insert(0,'$SCRIPT_DIR'); from lan_utils import get_bind_host; print(get_bind_host())")
+echo -e "${YELLOW}🧠${NC} Lancement du Brain (port 8020, host=$BRAIN_BIND_HOST)..."
 cd "$SCRIPT_DIR/neurolinked-brain"
-python3 run.py --port 8020 --host 127.0.0.1 > "$LOG_DIR/brain.log" 2>&1 &
+python3 run.py --port 8020 --host "$BRAIN_BIND_HOST" > "$LOG_DIR/brain.log" 2>&1 &
 BRAIN_PID=$!
 cd "$SCRIPT_DIR"
 
@@ -75,6 +100,7 @@ cd "$SCRIPT_DIR"
 # Attendre un peu puis vérifier les services
 sleep 3
 
+# Adapt health-check host: use 127.0.0.1 always since it works for both modes
 check_port() {
     python3 -c "
 import socket
@@ -107,9 +133,15 @@ echo -e "${GREEN} ============================================${NC}"
 echo -e "${GREEN}  SERVICES LANCÉS${NC}"
 echo -e "${GREEN} ============================================${NC}"
 echo ""
-echo "  Ops Center :   http://localhost:8010"
-echo "  Brain :        http://localhost:8020"
-echo "  Jarvis :       http://localhost:8340"
+if [ "$LAN_FLAG" -eq 1 ]; then
+    echo "  Ops Center :   http://localhost:8010  |  http://${LAN_HOST}:8010"
+    echo "  Brain :        http://localhost:8020  |  http://${LAN_HOST}:8020"
+    echo "  Jarvis :       http://localhost:8340  |  http://${LAN_HOST}:8340"
+else
+    echo "  Ops Center :   http://localhost:8010"
+    echo "  Brain :        http://localhost:8020"
+    echo "  Jarvis :       http://localhost:8340"
+fi
 echo ""
 echo "  Logs :"
 echo "    tail -f $LOG_DIR/brain.log"
@@ -117,6 +149,11 @@ echo "    tail -f $LOG_DIR/jarvis.log"
 echo "    tail -f $LOG_DIR/ops.log"
 echo ""
 echo "  Pour arrêter :  ./stop.sh"
+if [ "$LAN_FLAG" -ne 1 ]; then
+    echo ""
+    echo "  Astuce : ajoutez --lan pour accéder depuis le réseau local :"
+    echo "    ./start.sh --lan"
+fi
 echo ""
 
 # Sauvegarder les PIDs pour stop.sh

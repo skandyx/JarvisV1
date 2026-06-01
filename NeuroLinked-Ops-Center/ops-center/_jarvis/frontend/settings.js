@@ -7,7 +7,7 @@ const $ = (id) => document.getElementById(id);
 const FIELDS = [
     "llm_provider", "llm_model",
     "anthropic_api_key", "openai_api_key", "groq_api_key", "ollama_api_key", "xai_api_key", "mistral_api_key", "openrouter_api_key", "zai_api_key",
-    "tts_provider",
+    "tts_provider", "edge_voice", "piper_model",
     "elevenlabs_api_key", "elevenlabs_voice_id",
     "user_name", "user_address", "city",
     "neurolink_url",
@@ -28,6 +28,15 @@ function showRelevantProviderFields() {
     const p = $("s-llm_provider").value;
     document.querySelectorAll('.settings-field[data-provider]').forEach((el) => {
         el.style.display = el.dataset.provider === p ? "" : "none";
+    });
+}
+
+function showRelevantTtsFields() {
+    const p = $("s-tts_provider").value;
+    // For "auto", show edge_tts fields (since that's the default auto choice)
+    const effectiveProvider = p === "auto" ? "edge_tts" : p;
+    document.querySelectorAll('.settings-field[data-tts-provider]').forEach((el) => {
+        el.style.display = el.dataset.ttsProvider === effectiveProvider ? "" : "none";
     });
 }
 
@@ -61,6 +70,7 @@ async function loadSettings() {
             if (el) el.checked = !!data[c];
         }
         showRelevantProviderFields();
+        showRelevantTtsFields();
         // Show which LLM is actually live
         if (data.llm_active) {
             setStatus(`Actif : ${data.llm_active} (${data.llm_active_model || "modèle par défaut"})`);
@@ -140,6 +150,7 @@ window.addEventListener("DOMContentLoaded", () => {
     $("settings-cancel").addEventListener("click", closeSettings);
     $("settings-save").addEventListener("click", saveSettings);
     $("s-llm_provider").addEventListener("change", showRelevantProviderFields);
+    $("s-tts_provider").addEventListener("change", showRelevantTtsFields);
 
     // Dismiss on backdrop click
     $("settings-modal").addEventListener("click", (e) => {
