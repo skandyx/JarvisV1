@@ -126,7 +126,8 @@ async function maybePromptFirstRun() {
         setTimeout(() => {
             setStatus(
                 "Bienvenue — collez votre clé API pour le fournisseur choisi, puis cliquez sur Enregistrer. " +
-                "Les clés Anthropic (Claude), OpenAI, Groq, xAI, Mistral AI, OpenRouter et Z.ai fonctionnent toutes.",
+                "Les clés Anthropic (Claude), OpenAI, Groq, xAI, Mistral AI, OpenRouter et Z.ai fonctionnent toutes. " +
+                "Vous pouvez aussi installer des serveurs MCP, des plugins/skills depuis GitHub et enregistrer des projets locaux.",
                 true
             );
         }, 200);
@@ -209,3 +210,147 @@ window.__jarvisFreeVoice = function (text, { source = "jarvis" } = {}) {
 window.__jarvisFreeVoiceCancel = function () {
     try { window.speechSynthesis?.cancel(); } catch (_) {}
 };
+
+// ===========================================================================
+//   MCP / PLUGINS / PROJECTS — Action handlers for settings UI
+// ===========================================================================
+
+async function _apiCall(method, url, body) {
+    const opts = { method, headers: _hdr({ 'Content-Type': 'application/json' }) };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(url, opts);
+    return await r.json();
+}
+
+// Install MCP from GitHub
+async function installMcpGithub() {
+    const url = $('s-mcp_github_url').value.trim();
+    if (!url) { setStatus('Entrez une URL GitHub pour le serveur MCP.', false); return; }
+    setStatus('Installation du serveur MCP depuis GitHub...', true);
+    const result = await _apiCall('POST', '/api/mcp/install_github', { github_url: url });
+    if (result.ok) {
+        setStatus(`Serveur MCP installé : ${result.name || result.id}`);
+        $('s-mcp_github_url').value = '';
+    } else {
+        setStatus(`Erreur : ${result.error}`, false);
+    }
+}
+
+// Install MCP from URL
+async function installMcpUrl() {
+    const url = $('s-mcp_zip_url').value.trim();
+    if (!url) { setStatus('Entrez une URL pour l\'archive du serveur MCP.', false); return; }
+    setStatus('Installation du serveur MCP depuis l\'URL...', true);
+    const result = await _apiCall('POST', '/api/mcp/install_url', { zip_url: url });
+    if (result.ok) {
+        setStatus(`Serveur MCP installé : ${result.name || result.id}`);
+        $('s-mcp_zip_url').value = '';
+    } else {
+        setStatus(`Erreur : ${result.error}`, false);
+    }
+}
+
+// Create MCP from template
+async function createMcpTemplate() {
+    const templateId = $('s-mcp_template').value;
+    if (!templateId) { setStatus('Choisissez un modèle de serveur MCP.', false); return; }
+    setStatus('Création du serveur MCP depuis le modèle...', true);
+    const result = await _apiCall('POST', '/api/mcp/create_template', { template_id: templateId });
+    if (result.ok) {
+        setStatus(`Serveur MCP créé : ${result.name || result.id}`);
+        $('s-mcp_template').value = '';
+    } else {
+        setStatus(`Erreur : ${result.error}`, false);
+    }
+}
+
+// Install Plugin from GitHub
+async function installPluginGithub() {
+    const url = $('s-plugin_github_url').value.trim();
+    if (!url) { setStatus('Entrez une URL GitHub pour le plugin.', false); return; }
+    setStatus('Installation du plugin depuis GitHub...', true);
+    const result = await _apiCall('POST', '/api/plugins/install_github', { github_url: url });
+    if (result.ok) {
+        setStatus(`Plugin installé : ${result.name || result.id} (${result.tool_count || 0} outil(s))`);
+        $('s-plugin_github_url').value = '';
+    } else {
+        setStatus(`Erreur : ${result.error}`, false);
+    }
+}
+
+// Install Plugin from URL
+async function installPluginUrl() {
+    const url = $('s-plugin_zip_url').value.trim();
+    if (!url) { setStatus('Entrez une URL pour l\'archive du plugin.', false); return; }
+    setStatus('Installation du plugin depuis l\'URL...', true);
+    const result = await _apiCall('POST', '/api/plugins/install_url', { zip_url: url });
+    if (result.ok) {
+        setStatus(`Plugin installé : ${result.name || result.id}`);
+        $('s-plugin_zip_url').value = '';
+    } else {
+        setStatus(`Erreur : ${result.error}`, false);
+    }
+}
+
+// Install Plugin from local path
+async function installPluginLocal() {
+    const path = $('s-plugin_local_path').value.trim();
+    if (!path) { setStatus('Entrez le chemin du dossier local du plugin.', false); return; }
+    setStatus('Installation du plugin depuis le dossier local...', true);
+    const result = await _apiCall('POST', '/api/plugins/install_local', { local_path: path });
+    if (result.ok) {
+        setStatus(`Plugin installé : ${result.name || result.id}`);
+        $('s-plugin_local_path').value = '';
+    } else {
+        setStatus(`Erreur : ${result.error}`, false);
+    }
+}
+
+// Register a project
+async function registerProject() {
+    const path = $('s-project_path').value.trim();
+    if (!path) { setStatus('Entrez le chemin du dossier du projet.', false); return; }
+    const name = $('s-project_name').value.trim();
+    const agentType = $('s-project_agent_type').value;
+    setStatus('Enregistrement du projet...', true);
+    const result = await _apiCall('POST', '/api/projects/register', { path, name: name || undefined });
+    if (result.ok) {
+        let msg = `Projet enregistré : ${result.name || result.id} (${result.project_type || 'inconnu'}, ${result.file_count || 0} fichier(s))`;
+        // If an agent type was selected, assign it immediately
+        if (agentType && result.id) {
+            const agentResult = await _apiCall('POST', `/api/projects/${result.id}/assign_agent`, { agent_type: agentType });
+            if (agentResult.ok) {
+                msg += ` — Agent ${agentResult.name || agentType} assigné`;
+            }
+        }
+        setStatus(msg);
+        $('s-project_path').value = '';
+        $('s-project_name').value = '';
+        $('s-project_agent_type').value = '';
+    } else {
+        setStatus(`Erreur : ${result.error}`, false);
+    }
+}
+
+// Wire up action buttons when settings modal opens
+window.addEventListener("DOMContentLoaded", () => {
+    // MCP actions — install on Enter key or double-click
+    const mcpGithub = $('s-mcp_github_url');
+    const mcpZip = $('s-mcp_zip_url');
+    const mcpTemplate = $('s-mcp_template');
+    if (mcpGithub) mcpGithub.addEventListener('keydown', e => { if (e.key === 'Enter') installMcpGithub(); });
+    if (mcpZip) mcpZip.addEventListener('keydown', e => { if (e.key === 'Enter') installMcpUrl(); });
+    if (mcpTemplate) mcpTemplate.addEventListener('change', e => { if (e.target.value) createMcpTemplate(); });
+
+    // Plugin actions
+    const pluginGithub = $('s-plugin_github_url');
+    const pluginZip = $('s-plugin_zip_url');
+    const pluginLocal = $('s-plugin_local_path');
+    if (pluginGithub) pluginGithub.addEventListener('keydown', e => { if (e.key === 'Enter') installPluginGithub(); });
+    if (pluginZip) pluginZip.addEventListener('keydown', e => { if (e.key === 'Enter') installPluginUrl(); });
+    if (pluginLocal) pluginLocal.addEventListener('keydown', e => { if (e.key === 'Enter') installPluginLocal(); });
+
+    // Project actions
+    const projectPath = $('s-project_path');
+    if (projectPath) projectPath.addEventListener('keydown', e => { if (e.key === 'Enter') registerProject(); });
+});

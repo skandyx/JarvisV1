@@ -216,6 +216,24 @@ try:
 except Exception as _e:
     print(f"[jarvis] computer_tools unavailable: {_e}", flush=True)
     computer_tools = None
+try:
+    import mcp_manager
+    print(f"[jarvis] Gestionnaire MCP : {len(mcp_manager.list_servers())} serveur(s) enregistré(s)", flush=True)
+except Exception as _e:
+    print(f"[jarvis] mcp_manager unavailable: {_e}", flush=True)
+    mcp_manager = None
+try:
+    import plugin_manager
+    print(f"[jarvis] Gestionnaire Plugins : {len(plugin_manager.list_plugins())} plugin(s) installé(s)", flush=True)
+except Exception as _e:
+    print(f"[jarvis] plugin_manager unavailable: {_e}", flush=True)
+    plugin_manager = None
+try:
+    import project_manager
+    print(f"[jarvis] Gestionnaire Projets : {len(project_manager.list_projects())} projet(s) enregistré(s)", flush=True)
+except Exception as _e:
+    print(f"[jarvis] project_manager unavailable: {_e}", flush=True)
+    project_manager = None
 
 # Initialize Jarvis's local memory store. The brain IS Jarvis's memory; he
 # always has one. If the operator hasn't set a custom path in config.json,
@@ -1235,6 +1253,247 @@ TOOLS = [
             "required": ["method", "path"],
         },
     },
+    },
+    # ====================================================================
+    #   MCP MANAGER — Installer, créer et gérer des serveurs MCP
+    # ====================================================================
+    {
+        "name": "mcp_list_servers",
+        "description": "Lister tous les serveurs MCP installés. Utilisez quand l'utilisateur demande quels serveurs MCP sont disponibles.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "mcp_install_github",
+        "description": "Installer un serveur MCP depuis un dépôt GitHub. Clone le dépôt, détecte le point d'entrée et l'enregistre.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "github_url": {"type": "string", "description": "URL du dépôt GitHub (ex : https://github.com/user/repo)"},
+                "name": {"type": "string", "description": "Nom optionnel pour le serveur"},
+            },
+            "required": ["github_url"],
+        },
+    },
+    {
+        "name": "mcp_install_url",
+        "description": "Installer un serveur MCP depuis une URL (fichier .zip ou .tar.gz).",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "zip_url": {"type": "string", "description": "URL de l'archive ZIP/TAR du serveur MCP"},
+                "name": {"type": "string", "description": "Nom optionnel pour le serveur"},
+            },
+            "required": ["zip_url"],
+        },
+    },
+    {
+        "name": "mcp_create_template",
+        "description": "Créer un nouveau serveur MCP à partir d'un modèle prédéfini. Modèles : brain_tools, custom_tools, web_search.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "template_id": {"type": "string", "description": "ID du modèle : brain_tools, custom_tools, web_search"},
+                "name": {"type": "string", "description": "Nom optionnel pour le serveur"},
+            },
+            "required": ["template_id"],
+        },
+    },
+    {
+        "name": "mcp_list_templates",
+        "description": "Lister les modèles de serveurs MCP disponibles pour la création.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "mcp_remove_server",
+        "description": "Supprimer un serveur MCP installé.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "server_id": {"type": "string", "description": "ID du serveur MCP à supprimer"},
+            },
+            "required": ["server_id"],
+        },
+    },
+    {
+        "name": "mcp_get_config",
+        "description": "Générer la configuration JSON pour Claude Desktop ou Claude Code avec tous les serveurs MCP activés.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    # ====================================================================
+    #   PLUGIN MANAGER — Installer des plugins/skills depuis GitHub ou URLs
+    # ====================================================================
+    {
+        "name": "plugin_list",
+        "description": "Lister tous les plugins/skills installés. Utilisez quand l'utilisateur demande les plugins disponibles.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "plugin_install_github",
+        "description": "Installer un plugin/skill depuis un dépôt GitHub. Clone le dépôt, détecte les outils et les dépendances.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "github_url": {"type": "string", "description": "URL du dépôt GitHub du plugin"},
+                "name": {"type": "string", "description": "Nom optionnel pour le plugin"},
+            },
+            "required": ["github_url"],
+        },
+    },
+    {
+        "name": "plugin_install_url",
+        "description": "Installer un plugin/skill depuis une URL (archive ZIP/TAR).",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "zip_url": {"type": "string", "description": "URL de l'archive du plugin"},
+                "name": {"type": "string", "description": "Nom optionnel pour le plugin"},
+            },
+            "required": ["zip_url"],
+        },
+    },
+    {
+        "name": "plugin_install_local",
+        "description": "Installer un plugin/skill depuis un dossier local sur la machine.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "local_path": {"type": "string", "description": "Chemin absolu du dossier du plugin"},
+                "name": {"type": "string", "description": "Nom optionnel pour le plugin"},
+            },
+            "required": ["local_path"],
+        },
+    },
+    {
+        "name": "plugin_remove",
+        "description": "Supprimer un plugin installé.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "plugin_id": {"type": "string", "description": "ID du plugin à supprimer"},
+            },
+            "required": ["plugin_id"],
+        },
+    },
+    {
+        "name": "plugin_toggle",
+        "description": "Activer ou désactiver un plugin sans le supprimer.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "plugin_id": {"type": "string", "description": "ID du plugin"},
+                "enabled": {"type": "boolean", "description": "true pour activer, false pour désactiver"},
+            },
+            "required": ["plugin_id"],
+        },
+    },
+    # ====================================================================
+    #   PROJECT MANAGER — Dossiers projets locaux + agents de code
+    # ====================================================================
+    {
+        "name": "project_register",
+        "description": "Enregistrer un dossier local comme projet. Jarvis pourra ensuite accéder aux fichiers et assigner des agents. Appelez quand l'utilisateur dit 'ajoute mon projet', 'enregistre ce dossier', 'travaille sur mon projet'.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "Chemin absolu du dossier du projet"},
+                "name": {"type": "string", "description": "Nom optionnel pour le projet"},
+            },
+            "required": ["path"],
+        },
+    },
+    {
+        "name": "project_unregister",
+        "description": "Retirer un projet du registre.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "project_id": {"type": "string", "description": "ID du projet à retirer"},
+            },
+            "required": ["project_id"],
+        },
+    },
+    {
+        "name": "project_list",
+        "description": "Lister tous les projets enregistrés avec leur statut.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "project_scan",
+        "description": "Scanner un dossier pour détecter le type de projet, les langages et la structure.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "Chemin absolu du dossier à scanner"},
+            },
+            "required": ["path"],
+        },
+    },
+    {
+        "name": "project_structure",
+        "description": "Récupérer l'arborescence des fichiers d'un projet enregistré.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "project_id": {"type": "string", "description": "ID du projet"},
+                "max_depth": {"type": "integer", "description": "Profondeur max (défaut 3)"},
+            },
+            "required": ["project_id"],
+        },
+    },
+    {
+        "name": "project_assign_agent",
+        "description": "Assigner un agent à un projet. Types : code_review, architect, test_helper, doc_writer, security_auditor, refactorer. Appelez quand l'utilisateur dit 'vérifie mon code', 'fais une review', 'aide-moi à coder'.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "project_id": {"type": "string", "description": "ID du projet"},
+                "agent_type": {"type": "string", "description": "Type d'agent : code_review, architect, test_helper, doc_writer, security_auditor, refactorer"},
+                "config": {"type": "object", "description": "Configuration optionnelle de l'agent"},
+            },
+            "required": ["project_id", "agent_type"],
+        },
+    },
+    {
+        "name": "project_list_agents",
+        "description": "Lister les agents assignés à un projet.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "project_id": {"type": "string", "description": "ID du projet"},
+            },
+            "required": ["project_id"],
+        },
+    },
+    {
+        "name": "project_run_agent",
+        "description": "Exécuter un agent sur un projet. Prépare le prompt avec le contexte du projet et les fichiers pertinents, puis Jarvis l'analyse via le LLM.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "project_id": {"type": "string", "description": "ID du projet"},
+                "agent_id": {"type": "string", "description": "ID de l'agent à exécuter"},
+                "focus_files": {"type": "array", "items": {"type": "string"}, "description": "Fichiers spécifiques à analyser (optionnel)"},
+            },
+            "required": ["project_id", "agent_id"],
+        },
+    },
+    {
+        "name": "project_agent_types",
+        "description": "Lister les types d'agents disponibles pour les projets.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "project_remove_agent",
+        "description": "Retirer un agent d'un projet.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "project_id": {"type": "string", "description": "ID du projet"},
+                "agent_id": {"type": "string", "description": "ID de l'agent à retirer"},
+            },
+            "required": ["project_id", "agent_id"],
+        },
+    },
 ]
 
 
@@ -1260,6 +1519,18 @@ THOUGHT_KIND_BY_TOOL = {
     "type_text": "control",       "press_key": "control",          "hotkey": "control",
     "list_windows": "control",    "focus_window": "control",       "active_window": "control",
     "list_processes": "control",  "kill_process": "control",
+    # MCP Manager
+    "mcp_list_servers": "brain", "mcp_install_github": "brain", "mcp_install_url": "brain",
+    "mcp_create_template": "brain", "mcp_list_templates": "brain",
+    "mcp_remove_server": "brain", "mcp_get_config": "brain",
+    # Plugin Manager
+    "plugin_list": "code", "plugin_install_github": "code", "plugin_install_url": "code",
+    "plugin_install_local": "code", "plugin_remove": "code", "plugin_toggle": "code",
+    # Project Manager
+    "project_register": "code", "project_unregister": "code", "project_list": "code",
+    "project_scan": "code", "project_structure": "code", "project_assign_agent": "code",
+    "project_list_agents": "code", "project_run_agent": "code", "project_agent_types": "code",
+    "project_remove_agent": "code",
     # Interactive browser
     "browser_navigate": "web",    "browser_get_page": "web",       "browser_click_text": "web",
     "browser_click_selector": "web", "browser_fill_input": "web",  "browser_press_key": "web",
@@ -1937,12 +2208,93 @@ async def execute_tool(name: str, tool_input: dict) -> str:
                 body=tool_input.get("body"), params=tool_input.get("params"),
             ))
 
-        return f"Unknown tool: {name}"
+        # ---- Gestionnaire MCP ----
+        if name == "mcp_list_servers":
+            servers = mcp_manager.list_servers()
+            if not servers:
+                return "Aucun serveur MCP installé. Utilisez mcp_install_github ou mcp_create_template pour en ajouter."
+            return json.dumps(servers, indent=2, ensure_ascii=False)
+        if name == "mcp_install_github":
+            result = mcp_manager.install_from_github(tool_input["github_url"], name=tool_input.get("name"))
+            return json.dumps(result, indent=2, ensure_ascii=False)
+        if name == "mcp_install_url":
+            result = mcp_manager.install_from_url(tool_input["zip_url"], name=tool_input.get("name"))
+            return json.dumps(result, indent=2, ensure_ascii=False)
+        if name == "mcp_create_template":
+            result = mcp_manager.create_from_template(tool_input["template_id"], server_name=tool_input.get("name"))
+            return json.dumps(result, indent=2, ensure_ascii=False)
+        if name == "mcp_list_templates":
+            templates = mcp_manager.list_templates()
+            return json.dumps(templates, indent=2, ensure_ascii=False)
+        if name == "mcp_remove_server":
+            result = mcp_manager.remove_server(tool_input["server_id"])
+            return json.dumps(result, indent=2, ensure_ascii=False)
+        if name == "mcp_get_config":
+            config = mcp_manager.get_claude_desktop_config()
+            return json.dumps(config, indent=2, ensure_ascii=False)
+
+        # ---- Gestionnaire Plugins ----
+        if name == "plugin_list":
+            plugins = plugin_manager.list_plugins()
+            if not plugins:
+                return "Aucun plugin installé. Utilisez plugin_install_github ou plugin_install_url pour en ajouter."
+            return json.dumps(plugins, indent=2, ensure_ascii=False)
+        if name == "plugin_install_github":
+            result = plugin_manager.install_from_github(tool_input["github_url"], name=tool_input.get("name"))
+            return json.dumps(result, indent=2, ensure_ascii=False)
+        if name == "plugin_install_url":
+            result = plugin_manager.install_from_url(tool_input["zip_url"], name=tool_input.get("name"))
+            return json.dumps(result, indent=2, ensure_ascii=False)
+        if name == "plugin_install_local":
+            result = plugin_manager.install_from_local(tool_input["local_path"], name=tool_input.get("name"))
+            return json.dumps(result, indent=2, ensure_ascii=False)
+        if name == "plugin_remove":
+            result = plugin_manager.remove_plugin(tool_input["plugin_id"])
+            return json.dumps(result, indent=2, ensure_ascii=False)
+        if name == "plugin_toggle":
+            result = plugin_manager.toggle_plugin(tool_input["plugin_id"], tool_input.get("enabled", True))
+            return json.dumps(result, indent=2, ensure_ascii=False)
+
+        # ---- Gestionnaire Projets ----
+        if name == "project_register":
+            result = project_manager.register_project(tool_input["path"], name=tool_input.get("name"))
+            return json.dumps(result, indent=2, ensure_ascii=False)
+        if name == "project_unregister":
+            result = project_manager.unregister_project(tool_input["project_id"])
+            return json.dumps(result, indent=2, ensure_ascii=False)
+        if name == "project_list":
+            projects = project_manager.list_projects()
+            if not projects:
+                return "Aucun projet enregistré. Utilisez project_register pour ajouter un dossier de projet."
+            return json.dumps(projects, indent=2, ensure_ascii=False)
+        if name == "project_scan":
+            result = project_manager.scan_project(tool_input["path"])
+            return json.dumps(result, indent=2, ensure_ascii=False)
+        if name == "project_structure":
+            result = project_manager.get_project_structure(tool_input["project_id"], max_depth=tool_input.get("max_depth", 3))
+            return json.dumps(result, indent=2, ensure_ascii=False)
+        if name == "project_assign_agent":
+            result = project_manager.assign_agent(tool_input["project_id"], tool_input["agent_type"], config=tool_input.get("config"))
+            return json.dumps(result, indent=2, ensure_ascii=False)
+        if name == "project_list_agents":
+            result = project_manager.list_agents(tool_input["project_id"])
+            return json.dumps(result, indent=2, ensure_ascii=False)
+        if name == "project_run_agent":
+            result = project_manager.run_agent(tool_input["project_id"], tool_input["agent_id"], focus_files=tool_input.get("focus_files"))
+            return json.dumps(result, indent=2, ensure_ascii=False)
+        if name == "project_agent_types":
+            types = project_manager.list_available_agent_types()
+            return json.dumps(types, indent=2, ensure_ascii=False)
+        if name == "project_remove_agent":
+            result = project_manager.remove_agent(tool_input["project_id"], tool_input["agent_id"])
+            return json.dumps(result, indent=2, ensure_ascii=False)
+
+        return f"Outil inconnu : {name}"
     except KeyError as e:
-        return f"Tool {name} missing required parameter: {e}"
+        return f"Outil {name} : paramètre requis manquant : {e}"
     except Exception as e:
-        print(f"  Tool error ({name}): {e}", flush=True)
-        return f"Tool {name} failed: {e}"
+        print(f"  Erreur outil ({name}) : {e}", flush=True)
+        return f"Outil {name} échoué : {e}"
 
 
 def _serialize_content_block(block):
@@ -2712,6 +3064,161 @@ async def set_settings(payload: dict):
         "llm_active_model": getattr(llm, "model", None),
         "elevenlabs_configured": bool(ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID),
     }
+
+
+# ============================================================================
+#   API MCP / Plugins / Projets — gestion depuis les paramètres
+# ============================================================================
+
+@app.get("/api/mcp/servers")
+async def api_mcp_list():
+    """Lister les serveurs MCP installés."""
+    if mcp_manager is None:
+        return {"ok": False, "error": "Gestionnaire MCP non disponible."}
+    return {"ok": True, "servers": mcp_manager.list_servers()}
+
+@app.post("/api/mcp/install_github")
+async def api_mcp_install_github(payload: dict):
+    """Installer un serveur MCP depuis GitHub."""
+    if mcp_manager is None:
+        return {"ok": False, "error": "Gestionnaire MCP non disponible."}
+    url = payload.get("github_url", "").strip()
+    if not url:
+        return {"ok": False, "error": "URL GitHub requise."}
+    return mcp_manager.install_from_github(url, name=payload.get("name"))
+
+@app.post("/api/mcp/install_url")
+async def api_mcp_install_url(payload: dict):
+    """Installer un serveur MCP depuis une URL."""
+    if mcp_manager is None:
+        return {"ok": False, "error": "Gestionnaire MCP non disponible."}
+    url = payload.get("zip_url", "").strip()
+    if not url:
+        return {"ok": False, "error": "URL requise."}
+    return mcp_manager.install_from_url(url, name=payload.get("name"))
+
+@app.post("/api/mcp/create_template")
+async def api_mcp_create_template(payload: dict):
+    """Créer un serveur MCP depuis un modèle."""
+    if mcp_manager is None:
+        return {"ok": False, "error": "Gestionnaire MCP non disponible."}
+    template_id = payload.get("template_id", "").strip()
+    if not template_id:
+        return {"ok": False, "error": "ID du modèle requis."}
+    return mcp_manager.create_from_template(template_id, server_name=payload.get("name"))
+
+@app.get("/api/mcp/templates")
+async def api_mcp_templates():
+    """Lister les modèles MCP disponibles."""
+    if mcp_manager is None:
+        return {"ok": False, "error": "Gestionnaire MCP non disponible."}
+    return {"ok": True, "templates": mcp_manager.list_templates()}
+
+@app.delete("/api/mcp/{server_id}")
+async def api_mcp_remove(server_id: str):
+    """Supprimer un serveur MCP."""
+    if mcp_manager is None:
+        return {"ok": False, "error": "Gestionnaire MCP non disponible."}
+    return mcp_manager.remove_server(server_id)
+
+@app.get("/api/mcp/config")
+async def api_mcp_config():
+    """Générer la config MCP pour Claude Desktop/Code."""
+    if mcp_manager is None:
+        return {"ok": False, "error": "Gestionnaire MCP non disponible."}
+    return mcp_manager.get_claude_desktop_config()
+
+@app.get("/api/plugins")
+async def api_plugin_list():
+    """Lister les plugins installés."""
+    if plugin_manager is None:
+        return {"ok": False, "error": "Gestionnaire Plugins non disponible."}
+    return {"ok": True, "plugins": plugin_manager.list_plugins()}
+
+@app.post("/api/plugins/install_github")
+async def api_plugin_install_github(payload: dict):
+    """Installer un plugin depuis GitHub."""
+    if plugin_manager is None:
+        return {"ok": False, "error": "Gestionnaire Plugins non disponible."}
+    url = payload.get("github_url", "").strip()
+    if not url:
+        return {"ok": False, "error": "URL GitHub requise."}
+    return plugin_manager.install_from_github(url, name=payload.get("name"))
+
+@app.post("/api/plugins/install_url")
+async def api_plugin_install_url(payload: dict):
+    """Installer un plugin depuis une URL."""
+    if plugin_manager is None:
+        return {"ok": False, "error": "Gestionnaire Plugins non disponible."}
+    url = payload.get("zip_url", "").strip()
+    if not url:
+        return {"ok": False, "error": "URL requise."}
+    return plugin_manager.install_from_url(url, name=payload.get("name"))
+
+@app.post("/api/plugins/install_local")
+async def api_plugin_install_local(payload: dict):
+    """Installer un plugin depuis un dossier local."""
+    if plugin_manager is None:
+        return {"ok": False, "error": "Gestionnaire Plugins non disponible."}
+    path = payload.get("local_path", "").strip()
+    if not path:
+        return {"ok": False, "error": "Chemin local requis."}
+    return plugin_manager.install_from_local(path, name=payload.get("name"))
+
+@app.delete("/api/plugins/{plugin_id}")
+async def api_plugin_remove(plugin_id: str):
+    """Supprimer un plugin."""
+    if plugin_manager is None:
+        return {"ok": False, "error": "Gestionnaire Plugins non disponible."}
+    return plugin_manager.remove_plugin(plugin_id)
+
+@app.get("/api/projects")
+async def api_project_list():
+    """Lister les projets enregistrés."""
+    if project_manager is None:
+        return {"ok": False, "error": "Gestionnaire Projets non disponible."}
+    return {"ok": True, "projects": project_manager.list_projects()}
+
+@app.post("/api/projects/register")
+async def api_project_register(payload: dict):
+    """Enregistrer un projet local."""
+    if project_manager is None:
+        return {"ok": False, "error": "Gestionnaire Projets non disponible."}
+    path = payload.get("path", "").strip()
+    if not path:
+        return {"ok": False, "error": "Chemin du projet requis."}
+    return project_manager.register_project(path, name=payload.get("name"))
+
+@app.delete("/api/projects/{project_id}")
+async def api_project_unregister(project_id: str):
+    """Retirer un projet."""
+    if project_manager is None:
+        return {"ok": False, "error": "Gestionnaire Projets non disponible."}
+    return project_manager.unregister_project(project_id)
+
+@app.post("/api/projects/{project_id}/assign_agent")
+async def api_project_assign_agent(project_id: str, payload: dict):
+    """Assigner un agent à un projet."""
+    if project_manager is None:
+        return {"ok": False, "error": "Gestionnaire Projets non disponible."}
+    agent_type = payload.get("agent_type", "").strip()
+    if not agent_type:
+        return {"ok": False, "error": "Type d'agent requis."}
+    return project_manager.assign_agent(project_id, agent_type, config=payload.get("config"))
+
+@app.get("/api/projects/{project_id}/agents")
+async def api_project_agents(project_id: str):
+    """Lister les agents d'un projet."""
+    if project_manager is None:
+        return {"ok": False, "error": "Gestionnaire Projets non disponible."}
+    return project_manager.list_agents(project_id)
+
+@app.get("/api/projects/agent_types")
+async def api_project_agent_types():
+    """Lister les types d'agents disponibles."""
+    if project_manager is None:
+        return {"ok": False, "error": "Gestionnaire Projets non disponible."}
+    return {"ok": True, "agent_types": project_manager.list_available_agent_types()}
 
 
 @app.get("/api/health")

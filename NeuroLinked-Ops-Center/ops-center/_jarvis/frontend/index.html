@@ -248,6 +248,70 @@
                     </label>
                     <div id="settings-status" class="settings-status"></div>
                 </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">Serveurs MCP</div>
+                    <p style="font-size:11px;color:#8ec0d8;margin:0 0 8px">Installez des serveurs MCP depuis GitHub ou créez-en depuis des modèles. Ils seront configurés pour Claude Desktop et Claude Code.</p>
+                    <label class="settings-field">
+                        <span>Installer depuis GitHub</span>
+                        <input id="s-mcp_github_url" type="text" placeholder="https://github.com/user/mcp-server">
+                    </label>
+                    <label class="settings-field">
+                        <span>Installer depuis URL (ZIP)</span>
+                        <input id="s-mcp_zip_url" type="text" placeholder="https://example.com/mcp-server.zip">
+                    </label>
+                    <label class="settings-field">
+                        <span>Créer depuis modèle</span>
+                        <select id="s-mcp_template">
+                            <option value="">— Choisir un modèle —</option>
+                            <option value="brain_tools">Outils Brain NeuroLinked</option>
+                            <option value="custom_tools">Outils Personnalisés (vide)</option>
+                            <option value="web_search">Recherche Web</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">Plugins / Skills</div>
+                    <p style="font-size:11px;color:#8ec0d8;margin:0 0 8px">Installez des plugins et skills depuis GitHub, une URL ou un dossier local pour étendre les capacités de Jarvis.</p>
+                    <label class="settings-field">
+                        <span>Installer depuis GitHub</span>
+                        <input id="s-plugin_github_url" type="text" placeholder="https://github.com/user/jarvis-plugin">
+                    </label>
+                    <label class="settings-field">
+                        <span>Installer depuis URL (ZIP)</span>
+                        <input id="s-plugin_zip_url" type="text" placeholder="https://example.com/plugin.zip">
+                    </label>
+                    <label class="settings-field">
+                        <span>Installer depuis dossier local</span>
+                        <input id="s-plugin_local_path" type="text" placeholder="/chemin/vers/le/dossier/plugin">
+                    </label>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">Projets locaux</div>
+                    <p style="font-size:11px;color:#8ec0d8;margin:0 0 8px">Enregistrez des dossiers de projets et assignez des agents (vérification code, architecture, tests, sécurité, documentation, refactoring) pour vous aider à coder.</p>
+                    <label class="settings-field">
+                        <span>Chemin du projet</span>
+                        <input id="s-project_path" type="text" placeholder="/chemin/vers/votre/projet">
+                    </label>
+                    <label class="settings-field">
+                        <span>Nom du projet (optionnel)</span>
+                        <input id="s-project_name" type="text" placeholder="Mon Super Projet">
+                    </label>
+                    <label class="settings-field">
+                        <span>Agent à assigner</span>
+                        <select id="s-project_agent_type">
+                            <option value="">— Choisir un agent —</option>
+                            <option value="code_review">Vérificateur de Code</option>
+                            <option value="architect">Architecte Logiciel</option>
+                            <option value="test_helper">Assistant Tests</option>
+                            <option value="doc_writer">Rédacteur de Documentation</option>
+                            <option value="security_auditor">Auditeur de Sécurité</option>
+                            <option value="refactorer">Expert Refactoring</option>
+                        </select>
+                    </label>
+                </div>
             </div>
             <div class="settings-footer">
                 <button id="settings-save" class="settings-btn-primary">Enregistrer</button>
