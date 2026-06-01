@@ -131,122 +131,122 @@
     <div id="settings-modal" class="hidden">
         <div class="settings-card">
             <div class="settings-header">
-                <div class="settings-title">Settings</div>
+                <div class="settings-title">Paramètres</div>
                 <button id="settings-close" aria-label="Close">×</button>
             </div>
             <div class="settings-body">
                 <div class="settings-section">
-                    <div class="settings-section-title">Language Model</div>
+                    <div class="settings-section-title">Modèle de langage</div>
                     <label class="settings-field">
-                        <span>Provider</span>
+                        <span>Fournisseur</span>
                         <select id="s-llm_provider">
                             <option value="anthropic">Claude (Anthropic)</option>
                             <option value="openai">GPT (OpenAI)</option>
-                            <option value="groq">Groq (fast, free-tier)</option>
-                            <option value="ollama">Ollama (local, free)</option>
+                            <option value="groq">Groq (rapide, gratuit)</option>
+                            <option value="ollama">Ollama (local, gratuit)</option>
                             <option value="xai">Grok (xAI)</option>
                             <option value="mistral">Mistral AI</option>
-                            <option value="openrouter">OpenRouter (multi-model)</option>
+                            <option value="openrouter">OpenRouter (multi-modèles)</option>
                         </select>
                     </label>
                     <label class="settings-field">
-                        <span>Model <small>(optional override)</small></span>
-                        <input id="s-llm_model" type="text" placeholder="e.g. claude-haiku-4-5, gpt-4o-mini, llama-3.3-70b-versatile">
+                        <span>Modèle <small>(remplacement optionnel)</small></span>
+                        <input id="s-llm_model" type="text" placeholder="ex: claude-haiku-4-5, gpt-4o-mini, llama-3.3-70b-versatile">
                     </label>
                     <label class="settings-field" data-provider="anthropic">
-                        <span>Anthropic key</span>
+                        <span>Clé Anthropic</span>
                         <input id="s-anthropic_api_key" type="password" placeholder="sk-ant-...">
                     </label>
                     <label class="settings-field" data-provider="openai">
-                        <span>OpenAI key</span>
+                        <span>Clé OpenAI</span>
                         <input id="s-openai_api_key" type="password" placeholder="sk-...">
                     </label>
                     <label class="settings-field" data-provider="groq">
-                        <span>Groq key</span>
+                        <span>Clé Groq</span>
                         <input id="s-groq_api_key" type="password" placeholder="gsk_...">
                     </label>
                     <label class="settings-field" data-provider="xai">
-                        <span>xAI key</span>
+                        <span>Clé xAI</span>
                         <input id="s-xai_api_key" type="password" placeholder="xai-...">
                     </label>
                     <label class="settings-field" data-provider="ollama">
-                        <span>Ollama URL</span>
-                        <input id="s-ollama_api_key" type="text" value="ollama" placeholder="leave as 'ollama' for localhost:11434">
+                        <span>URL Ollama</span>
+                        <input id="s-ollama_api_key" type="text" value="ollama" placeholder="laissez 'ollama' pour localhost:11434">
                     </label>
                     <label class="settings-field" data-provider="mistral">
-                        <span>Mistral AI key</span>
+                        <span>Clé Mistral AI</span>
                         <input id="s-mistral_api_key" type="password" placeholder="your-mistral-api-key">
                     </label>
                     <label class="settings-field" data-provider="openrouter">
-                        <span>OpenRouter key</span>
+                        <span>Clé OpenRouter</span>
                         <input id="s-openrouter_api_key" type="password" placeholder="sk-or-...">
                     </label>
                 </div>
 
                 <div class="settings-section">
-                    <div class="settings-section-title">Voice</div>
+                    <div class="settings-section-title">Voix</div>
                     <label class="settings-field">
-                        <span>Voice mode</span>
+                        <span>Mode vocal</span>
                         <select id="s-tts_provider">
-                            <option value="auto">Auto (free browser voice unless ElevenLabs set)</option>
-                            <option value="browser">Browser (free, built-in)</option>
-                            <option value="elevenlabs">ElevenLabs (premium, requires key)</option>
+                            <option value="auto">Auto (voix navigateur gratuite sauf si ElevenLabs configuré)</option>
+                            <option value="browser">Navigateur (gratuit, intégré)</option>
+                            <option value="elevenlabs">ElevenLabs (premium, nécessite une clé)</option>
                         </select>
                     </label>
                     <label class="settings-field">
-                        <span>ElevenLabs key</span>
+                        <span>Clé ElevenLabs</span>
                         <input id="s-elevenlabs_api_key" type="password" placeholder="sk_...">
                     </label>
                     <label class="settings-field">
-                        <span>ElevenLabs voice ID</span>
+                        <span>ID voix ElevenLabs</span>
                         <input id="s-elevenlabs_voice_id" type="text" placeholder="e.g. EXAVITQu4vr4xnSDxMaL">
                     </label>
                 </div>
 
                 <div class="settings-section">
-                    <div class="settings-section-title">You</div>
+                    <div class="settings-section-title">Vous</div>
                     <label class="settings-field">
-                        <span>Your name</span>
-                        <input id="s-user_name" type="text" placeholder="Your name">
+                        <span>Votre nom</span>
+                        <input id="s-user_name" type="text" placeholder="Votre nom">
                     </label>
                     <label class="settings-field">
-                        <span>How Jarvis addresses you</span>
-                        <input id="s-user_address" type="text" placeholder="Sir, ma'am, friend...">
+                        <span>Comment Jarvis vous appelle</span>
+                        <input id="s-user_address" type="text" placeholder="Monsieur, madame, ami...">
                     </label>
                     <label class="settings-field">
-                        <span>City (for weather)</span>
+                        <span>Ville (pour la météo)</span>
                         <input id="s-city" type="text" placeholder="New York">
                     </label>
                 </div>
 
                 <div class="settings-section">
-                    <div class="settings-section-title">NeuroLinked Brain</div>
+                    <div class="settings-section-title">Brain NeuroLinked</div>
                     <label class="settings-field">
-                        <span>Brain URL</span>
+                        <span>URL du Brain</span>
                         <input id="s-neurolink_url" type="text" placeholder="http://localhost:8000">
                     </label>
                     <label class="settings-field settings-checkbox">
                         <input id="s-auto_connect_neurolink" type="checkbox">
-                        <span>Auto-connect to NeuroLinked Brain on startup</span>
+                        <span>Connexion auto au Brain NeuroLinked au démarrage</span>
                     </label>
                 </div>
 
                 <div class="settings-section">
                     <div class="settings-section-title">GoHighLevel</div>
                     <label class="settings-field">
-                        <span>Location ID</span>
+                        <span>ID de localisation</span>
                         <input id="s-ghl_location_id" type="text" placeholder="e.g. abcDEFghiJKLmnoPQR12">
                     </label>
                     <label class="settings-field">
-                        <span>Private Integration Token</span>
+                        <span>Jeton d'intégration privé</span>
                         <input id="s-ghl_api_key" type="password" placeholder="pit-...">
                     </label>
                     <div id="settings-status" class="settings-status"></div>
                 </div>
             </div>
             <div class="settings-footer">
-                <button id="settings-save" class="settings-btn-primary">Save</button>
-                <button id="settings-cancel" class="settings-btn-ghost">Cancel</button>
+                <button id="settings-save" class="settings-btn-primary">Enregistrer</button>
+                <button id="settings-cancel" class="settings-btn-ghost">Annuler</button>
             </div>
         </div>
     </div>

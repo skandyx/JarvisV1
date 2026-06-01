@@ -350,13 +350,13 @@ def make_provider(name: str, api_key: str = "", model: str = "", **kwargs) -> _P
 
 
 def from_config(cfg: dict) -> _Provider:
-    """Build the active provider from a config.json dict.
+    """Construit le fournisseur actif à partir d'un dict config.json.
 
-    Expected fields:
-        llm_provider        : "anthropic" | "openai" | "groq" | "ollama" | "xai"
-        llm_model           : optional model override
-        <provider>_api_key  : key for the active provider (e.g. "openai_api_key")
-    Falls back to `anthropic_api_key` when llm_provider is anthropic (backwards compat).
+    Champs attendus :
+        llm_provider        : "anthropic" | "openai" | "groq" | "ollama" | "xai" | "mistral" | "openrouter"
+        llm_model           : remplacement de modèle optionnel
+        <provider>_api_key  : clé pour le fournisseur actif (ex. "openai_api_key")
+    Remonte à `anthropic_api_key` quand llm_provider est anthropic (rétrocompatibilité).
     """
     name = (cfg.get("llm_provider") or "anthropic").lower()
     model = cfg.get("llm_model") or ""
@@ -383,12 +383,12 @@ def from_config(cfg: dict) -> _Provider:
         key = cfg.get("openrouter_api_key") or os.environ.get("OPENROUTER_API_KEY") or ""
         model = model or "openai/gpt-4o-mini"
     else:
-        raise ValueError(f"Unknown llm_provider in config: {name}")
+        raise ValueError(f"Fournisseur llm_provider inconnu dans la config : {name}")
 
     if not key and name not in ("ollama", "local"):
         raise ValueError(
-            f"Missing API key for provider '{name}'. "
-            f"Set '{name}_api_key' in config.json or via the settings UI."
+            f"Clé API manquante pour le fournisseur '{name}'. "
+            f"Définissez '{name}_api_key' dans config.json ou via l'interface des paramètres."
         )
 
     return make_provider(name, api_key=key, model=model)

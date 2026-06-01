@@ -1586,7 +1586,7 @@ async def consult_brain(question: str) -> str:
     # Route consult_brain through the same provider the user configured —
     # falls back to "no brain configured" if no provider is set.
     if llm is None:
-        return "The Brain is offline — no LLM configured, sir."
+        return "Le Brain est hors ligne — aucun LLM configuré, monsieur."
     try:
         resp = await llm.chat(
             system=prompt,
@@ -2316,7 +2316,7 @@ async def process_message(session_id: str, user_text: str, ws: WebSocket, frame_
         if llm is None:
             await _speak(
                 ws,
-                "I don't have an LLM configured yet, sir. Please open settings and add an API key.",
+                "Je n'ai pas de LLM configuré, monsieur. Veuillez ouvrir les paramètres et ajouter une clé API.",
                 source="jarvis",
             )
             return
@@ -2617,14 +2617,15 @@ _SETTINGS_EDITABLE = {
     # LLM
     "llm_provider", "llm_model",
     "anthropic_api_key", "openai_api_key", "groq_api_key", "ollama_api_key", "xai_api_key",
+    "mistral_api_key", "openrouter_api_key",
     # TTS
     "tts_provider",
     "elevenlabs_api_key", "elevenlabs_voice_id", "brain_voice_id",
-    # Personal
+    # Personnel
     "user_name", "user_address", "city",
-    # NeuroLink bridge
+    # Pont NeuroLink
     "neurolink_url", "auto_connect_neurolink",
-    # Business integrations
+    # Intégrations métier
     "ghl_location_id", "ghl_api_key",
 }
 
@@ -2762,7 +2763,7 @@ async def cortex_status():
 
     # brain cortex = LLM reachable + provider chosen
     if llm is None:
-        brain = bad("no LLM provider configured — open settings")
+        brain = bad("aucun fournisseur LLM configuré — ouvrez les paramètres")
     else:
         brain = {
             "ok": True,

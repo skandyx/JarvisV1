@@ -63,12 +63,12 @@ async function loadSettings() {
         showRelevantProviderFields();
         // Show which LLM is actually live
         if (data.llm_active) {
-            setStatus(`Active: ${data.llm_active} (${data.llm_active_model || "default model"})`);
+            setStatus(`Actif : ${data.llm_active} (${data.llm_active_model || "modèle par défaut"})`);
         } else {
-            setStatus("No LLM configured — add an API key below.", false);
+            setStatus("Aucun LLM configuré — ajoutez une clé API ci-dessous.", false);
         }
     } catch (e) {
-        setStatus(`Load failed: ${e.message}`, false);
+        setStatus(`Échec du chargement : ${e.message}`, false);
     }
 }
 
@@ -91,13 +91,13 @@ async function saveSettings() {
         });
         const data = await r.json();
         if (data.ok) {
-            setStatus(`Saved — LLM active: ${data.llm_active || "none"}`);
+            setStatus(`Sauvegardé — LLM actif : ${data.llm_active || "aucun"}`);
             setTimeout(() => closeSettings(), 1200);
         } else {
-            setStatus(data.error || "Save failed", false);
+            setStatus(data.error || "Échec de la sauvegarde", false);
         }
     } catch (e) {
-        setStatus(`Save failed: ${e.message}`, false);
+        setStatus(`Échec de la sauvegarde : ${e.message}`, false);
     }
 }
 
@@ -110,10 +110,10 @@ function closeSettings() {
     $("settings-modal").classList.add("hidden");
 }
 
-// First-run check. If there's no LLM key configured (and the provider isn't
-// pointing at local Ollama, which doesn't need a key), pop the settings modal
-// open automatically so a fresh user immediately sees where to paste their
-// keys instead of getting "I don't have an LLM configured" silence.
+// Vérification premier lancement. Si aucune clé LLM n'est configurée (et que le
+// fournisseur n'est pas Ollama local, qui ne nécessite pas de clé), ouvre
+// automatiquement la fenêtre des paramètres pour que l'utilisateur sache où
+// coller ses clés au lieu d'avoir le silence "aucun LLM configuré".
 async function maybePromptFirstRun() {
     try {
         const r = await fetch("/api/settings", { headers: _hdr() });
