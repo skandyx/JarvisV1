@@ -50,7 +50,7 @@ except Exception:
 http = httpx.AsyncClient(timeout=30)
 
 # Multi-LLM provider layer — swappable from the Settings UI or config.json.
-# Active provider: config["llm_provider"] in {"anthropic","openai","groq","ollama","xai","mistral","openrouter"}.
+# Active provider: config["llm_provider"] in {"anthropic","openai","groq","ollama","xai","mistral","openrouter","zai"}.
 import llm_providers
 def _rebuild_llm():
     """(Re)build the active LLM provider from the current config dict.
@@ -2316,7 +2316,7 @@ async def process_message(session_id: str, user_text: str, ws: WebSocket, frame_
         if llm is None:
             await _speak(
                 ws,
-                "Je n'ai pas de modèle linguistique configuré. Veuillez ouvrir les paramètres (icône ⚙), sélectionner un fournisseur comme Mistral AI, OpenAI ou autre, puis coller votre clé API et cliquer sur Enregistrer.",
+                "Je n'ai pas de modèle linguistique configuré. Veuillez ouvrir les paramètres (icône ⚙), sélectionner un fournisseur (Mistral AI, Z.ai, OpenAI ou autre), puis coller votre clé API et cliquer sur Enregistrer.",
                 source="jarvis",
             )
             return
@@ -2609,15 +2609,15 @@ app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__
 
 
 # ============================================================================
-#   SETTINGS API — lets the frontend read/write config.json from the gear UI
-#   so members can plug in their own API keys without touching the filesystem.
+#   API PARAMÈTRES — permet au frontend de lire/écrire config.json depuis l'interface
+#   pour que les utilisateurs puissent configurer leurs clés API sans toucher au système de fichiers.
 # ============================================================================
 
 _SETTINGS_EDITABLE = {
     # LLM
     "llm_provider", "llm_model",
     "anthropic_api_key", "openai_api_key", "groq_api_key", "ollama_api_key", "xai_api_key",
-    "mistral_api_key", "openrouter_api_key",
+    "mistral_api_key", "openrouter_api_key", "zai_api_key",
     # TTS
     "tts_provider",
     "elevenlabs_api_key", "elevenlabs_voice_id", "brain_voice_id",
@@ -2638,7 +2638,7 @@ def _mask(v):
 
 @app.get("/api/settings")
 async def get_settings():
-    """Return a SAFE view of the current config — API keys are masked, never raw."""
+    """Retourne une vue SÉCURISÉE de la config actuelle — les clés API sont masquées, jamais en clair."""
     out = {}
     for k in _SETTINGS_EDITABLE:
         v = config.get(k, "")
@@ -2655,27 +2655,27 @@ async def get_settings():
 
 @app.post("/api/settings")
 async def set_settings(payload: dict):
-    """Accept any subset of editable fields, merge into config.json, persist,
-    and rebuild live globals (LLM provider, ElevenLabs creds, NeuroLink bridge)
-    so changes take effect immediately — no Jarvis restart required."""
-    # Only accept known keys — silently drop everything else for safety.
+    """Accepte un sous-ensemble de champs modifiables, fusionne dans config.json, sauvegarde,
+    et reconstruit les variables globales actives (fournisseur LLM, identifiants ElevenLabs, pont NeuroLink)
+    pour que les changements prennent effet immédiatement — sans redémarrage de Jarvis."""
+    # N'accepter que les clés connues — ignorer silencieusement tout le reste pour la sécurité.
     changes = {k: v for k, v in (payload or {}).items() if k in _SETTINGS_EDITABLE}
 
-    # For masked API key fields, skip any value that's still the masked form —
-    # that means the user didn't change it in the UI.
+    # Pour les champs de clés API masquées, ignorer toute valeur encore sous forme masquée —
+    # cela signifie que l'utilisateur ne l'a pas modifiée dans l'interface.
     for k in list(changes.keys()):
         if "api_key" in k and isinstance(changes[k], str) and "•" in changes[k]:
             del changes[k]
 
-    # Merge + persist
+    # Fusion + sauvegarde
     config.update(changes)
     try:
         with open(CONFIG_PATH, "w", encoding="utf-8") as f:
             json.dump(config, f, indent=2)
     except Exception as e:
-        return {"ok": False, "error": f"Could not write config.json: {e}"}
+        return {"ok": False, "error": f"Impossible d'écrire config.json : {e}"}
 
-    # Live reload affected globals
+    # Rechargement en direct des variables globales affectées
     global ANTHROPIC_API_KEY, ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID, BRAIN_VOICE_ID, ai
     ANTHROPIC_API_KEY = config.get("anthropic_api_key", "") or ""
     ELEVENLABS_API_KEY = config.get("elevenlabs_api_key", "") or ""
@@ -2687,14 +2687,14 @@ async def set_settings(payload: dict):
         ai = None
     _rebuild_llm()
 
-    # Re-init business integrations whose creds may have changed
+    # Ré-initialiser les intégrations métier dont les identifiants ont pu changer
     if "ghl_location_id" in changes or "ghl_api_key" in changes:
         try:
             ghl.init(config.get("ghl_location_id", ""), config.get("ghl_api_key", ""))
         except Exception:
             pass
 
-    # Re-init NeuroLink if its URL changed
+    # Ré-initialiser NeuroLink si son URL a changé
     if "neurolink_url" in changes or "auto_connect_neurolink" in changes:
         try:
             import neurolink_bridge

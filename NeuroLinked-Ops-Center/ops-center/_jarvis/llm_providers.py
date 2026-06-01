@@ -1,6 +1,6 @@
 """
 Couche Fournisseur LLM — Interface unifiée pour Anthropic, OpenAI, Groq,
-Ollama, xAI, Mistral AI et OpenRouter.
+Ollama, xAI, Mistral AI, OpenRouter et Z.ai (GLM).
 
 Tous les fournisseurs retournent une réponse au format Anthropic :
 
@@ -303,6 +303,17 @@ class MistralProvider(OpenAIProvider):
 
 
 # ---------------------------------------------------------------------------
+# Z.ai (ZhipuAI / GLM) — API compatible OpenAI, modèles GLM-4
+# ---------------------------------------------------------------------------
+
+class ZAIProvider(OpenAIProvider):
+    name = "zai"
+
+    def __init__(self, api_key: str, model: str = "glm-4-plus", **kwargs):
+        super().__init__(api_key=api_key, model=model, base_url="https://open.bigmodel.cn/api/paas/v4", **kwargs)
+
+
+# ---------------------------------------------------------------------------
 # OpenRouter — API compatible OpenAI avec de nombreux modèles
 # ---------------------------------------------------------------------------
 
@@ -332,6 +343,9 @@ _PROVIDERS = {
     "mistral":   MistralProvider,
     "mistralai": MistralProvider,   # alias
     "openrouter": OpenRouterProvider,
+    "zai":       ZAIProvider,
+    "zhipu":     ZAIProvider,       # alias
+    "glm":       ZAIProvider,        # alias
 }
 
 
@@ -373,6 +387,7 @@ def from_config(cfg: dict) -> _Provider:
         # Ordre de préférence pour l'auto-détection
         _AUTO_DETECT_ORDER = [
             ("mistral",    "mistral_api_key"),
+            ("zai",        "zai_api_key"),
             ("anthropic",  "anthropic_api_key"),
             ("openai",     "openai_api_key"),
             ("groq",       "groq_api_key"),
@@ -395,6 +410,7 @@ def from_config(cfg: dict) -> _Provider:
         if not name:
             _ENV_DETECT = [
                 ("mistral",   "MISTRAL_API_KEY"),
+                ("zai",       "ZAI_API_KEY"),
                 ("anthropic", "ANTHROPIC_API_KEY"),
                 ("openai",    "OPENAI_API_KEY"),
                 ("groq",      "GROQ_API_KEY"),
@@ -411,7 +427,7 @@ def from_config(cfg: dict) -> _Provider:
             raise ValueError(
                 "Aucun fournisseur LLM configuré. Veuillez définir 'llm_provider' et une "
                 "clé API correspondante dans config.json ou via l'interface des paramètres. "
-                "Fournisseurs disponibles : anthropic, openai, groq, ollama, xai, mistral, openrouter."
+                "Fournisseurs disponibles : anthropic, openai, groq, ollama, xai, mistral, openrouter, zai."
             )
 
     if name in ("anthropic", "claude"):
@@ -435,6 +451,9 @@ def from_config(cfg: dict) -> _Provider:
     elif name == "openrouter":
         key = cfg.get("openrouter_api_key") or os.environ.get("OPENROUTER_API_KEY") or ""
         model = model or "openai/gpt-4o-mini"
+    elif name in ("zai", "zhipu", "glm"):
+        key = cfg.get("zai_api_key") or os.environ.get("ZAI_API_KEY") or ""
+        model = model or "glm-4-plus"
     else:
         raise ValueError(f"Fournisseur llm_provider inconnu dans la config : {name}")
 

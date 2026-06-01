@@ -125,14 +125,14 @@
     </div>
 
     <!-- Settings gear button (preserved from previous UI) -->
-    <button id="settings-btn" title="Settings" aria-label="Open settings">⚙</button>
+    <button id="settings-btn" title="Paramètres" aria-label="Ouvrir les paramètres">⚙</button>
 
     <!-- Settings modal (preserved from previous UI; drives /api/settings hot-reload) -->
     <div id="settings-modal" class="hidden">
         <div class="settings-card">
             <div class="settings-header">
                 <div class="settings-title">Paramètres</div>
-                <button id="settings-close" aria-label="Close">×</button>
+                <button id="settings-close" aria-label="Fermer">×</button>
             </div>
             <div class="settings-body">
                 <div class="settings-section">
@@ -147,11 +147,12 @@
                             <option value="xai">Grok (xAI)</option>
                             <option value="mistral">Mistral AI</option>
                             <option value="openrouter">OpenRouter (multi-modèles)</option>
+                            <option value="zai">Z.ai / GLM (ZhipuAI)</option>
                         </select>
                     </label>
                     <label class="settings-field">
                         <span>Modèle <small>(remplacement optionnel)</small></span>
-                        <input id="s-llm_model" type="text" placeholder="ex: claude-haiku-4-5, gpt-4o-mini, llama-3.3-70b-versatile">
+                        <input id="s-llm_model" type="text" placeholder="ex : claude-haiku-4-5, gpt-4o-mini, mistral-large-latest, glm-4-plus">
                     </label>
                     <label class="settings-field" data-provider="anthropic">
                         <span>Clé Anthropic</span>
@@ -181,6 +182,10 @@
                         <span>Clé OpenRouter</span>
                         <input id="s-openrouter_api_key" type="password" placeholder="sk-or-...">
                     </label>
+                    <label class="settings-field" data-provider="zai">
+                        <span>Clé Z.ai (ZhipuAI)</span>
+                        <input id="s-zai_api_key" type="password" placeholder="votre-clé-api-zai">
+                    </label>
                 </div>
 
                 <div class="settings-section">
@@ -199,7 +204,7 @@
                     </label>
                     <label class="settings-field">
                         <span>ID voix ElevenLabs</span>
-                        <input id="s-elevenlabs_voice_id" type="text" placeholder="e.g. EXAVITQu4vr4xnSDxMaL">
+                        <input id="s-elevenlabs_voice_id" type="text" placeholder="ex : EXAVITQu4vr4xnSDxMaL">
                     </label>
                 </div>
 
@@ -235,7 +240,7 @@
                     <div class="settings-section-title">GoHighLevel</div>
                     <label class="settings-field">
                         <span>ID de localisation</span>
-                        <input id="s-ghl_location_id" type="text" placeholder="e.g. abcDEFghiJKLmnoPQR12">
+                        <input id="s-ghl_location_id" type="text" placeholder="ex : abcDEFghiJKLmnoPQR12">
                     </label>
                     <label class="settings-field">
                         <span>Jeton d'intégration privé</span>

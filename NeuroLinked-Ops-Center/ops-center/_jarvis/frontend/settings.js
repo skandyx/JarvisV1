@@ -6,7 +6,7 @@ const $ = (id) => document.getElementById(id);
 
 const FIELDS = [
     "llm_provider", "llm_model",
-    "anthropic_api_key", "openai_api_key", "groq_api_key", "ollama_api_key", "xai_api_key", "mistral_api_key", "openrouter_api_key",
+    "anthropic_api_key", "openai_api_key", "groq_api_key", "ollama_api_key", "xai_api_key", "mistral_api_key", "openrouter_api_key", "zai_api_key",
     "tts_provider",
     "elevenlabs_api_key", "elevenlabs_voice_id",
     "user_name", "user_address", "city",
@@ -126,7 +126,7 @@ async function maybePromptFirstRun() {
         setTimeout(() => {
             setStatus(
                 "Bienvenue — collez votre clé API pour le fournisseur choisi, puis cliquez sur Enregistrer. " +
-                "Les clés Anthropic (Claude), OpenAI, Groq, xAI, Mistral AI et OpenRouter fonctionnent toutes.",
+                "Les clés Anthropic (Claude), OpenAI, Groq, xAI, Mistral AI, OpenRouter et Z.ai fonctionnent toutes.",
                 true
             );
         }, 200);

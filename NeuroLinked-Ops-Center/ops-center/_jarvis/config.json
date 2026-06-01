@@ -6,6 +6,7 @@
   "groq_api_key": "",
   "mistral_api_key": "",
   "openrouter_api_key": "",
+  "zai_api_key": "",
   "elevenlabs_api_key": "",
   "elevenlabs_voice_id": "",
   "user_name": "Ami",
