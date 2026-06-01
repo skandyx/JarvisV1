@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NeuroLinked Ops Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0f1c;
+    --bg-2:#0f1524;
+    --panel:#141b2d;
+    --panel-2:#1a2238;
+    --line:#1f2a42;
+    --line-2:#2b3a5a;
+    --cyan:#3bd6ff;
+    --green:#3ddc97;
+    --amber:#ffb84a;
+    --red:#ff5a7a;
+    --text:#e6ecf7;
+    --text-2:#9aa8c2;
+    --text-3:#6a7897;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.5;min-height:100vh;
+  }
+  .wrap{max-width:min(1680px, 96vw);margin:0 auto;padding:28px 28px 64px}
+
+  /* HEADER */
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:22px;
+  }
+  .topbar .brand{display:flex;align-items:center;gap:14px}
+  .topbar .logo{
+    width:40px;height:40px;border-radius:10px;
+    background:linear-gradient(135deg,#3bd6ff,#7b6fff);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;color:#0a0f1c;font-size:18px;
+  }
+  .topbar h1{font-size:17px;font-weight:600;letter-spacing:.3px}
+  .topbar .sub{color:var(--text-3);font-size:12px;margin-top:2px}
+  .status-pills{display:flex;gap:8px}
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:6px 11px;border-radius:6px;
+    background:var(--panel);border:1px solid var(--line);
+    font-size:11px;color:var(--text-2);font-weight:500;font-family:'JetBrains Mono',monospace;
+  }
+  .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+  .pill.red .dot{background:var(--red);box-shadow:0 0 6px var(--red)}
+  .pill.purple .dot{background:#b18bff;box-shadow:0 0 6px #b18bff}
+
+  /* SECTION */
+  .section{
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    margin-bottom:18px;overflow:hidden;
+  }
+  .section-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 22px;border-bottom:1px solid var(--line);
+  }
+  .section-head h2{font-size:13px;font-weight:600;letter-spacing:.5px;color:var(--text)}
+  .section-head h2 .num{color:var(--text-3);font-weight:400;font-family:'JetBrains Mono',monospace;margin-right:8px}
+  .section-head .note{color:var(--text-3);font-size:11px;margin-top:3px;font-family:'JetBrains Mono',monospace}
+  .section-head .actions{display:flex;gap:8px;align-items:center}
+  .section-body{padding:18px 22px}
+
+  /* BUTTONS */
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;justify-content:center;
+    padding:8px 14px;border-radius:7px;
+    background:var(--panel-2);border:1px solid var(--line-2);
+    color:var(--text);font-family:inherit;font-size:12px;font-weight:500;
+    cursor:pointer;transition:all .12s;user-select:none;text-decoration:none;
+  }
+  .btn:hover{background:#243051;border-color:var(--cyan)}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:var(--cyan);color:#0a0f1c;border-color:var(--cyan)}
+  .btn.primary:hover{background:#66e0ff}
+  .btn.full{width:100%}
+  .btn.small{padding:6px 10px;font-size:11px}
+
+  /* IFRAMES — tall enough that the Jarvis cortex rail / webcam / bottom HUD
+     and the Brain input row aren't cropped, but small enough that both
+     sections fit the viewport without heavy scrolling. */
+  iframe.embed{width:100%;border:none;background:#000;display:block}
+  .embed-jarvis{height:clamp(620px, 70vh, 780px)}
+  .embed-brain {height:clamp(560px, 64vh, 720px)}
+
+  /* QUERY */
+  .query-row{display:flex;gap:8px}
+  input{
+    background:var(--bg-2);border:1px solid var(--line);border-radius:7px;
+    padding:10px 12px;color:var(--text);font-family:inherit;font-size:13px;outline:none;width:100%;
+  }
+  input:focus{border-color:var(--cyan)}
+  label.lbl{display:block;font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;font-weight:500}
+
+  .results .r{
+    display:flex;gap:12px;padding:10px 12px;
+    background:var(--bg-2);border:1px solid var(--line);border-radius:7px;
+    margin:6px 0;
+  }
+  .results .r .r-nm{color:var(--cyan);font-weight:500;font-size:12px}
+  .results .r .r-path{color:var(--text-3);font-size:11px;font-family:'JetBrains Mono',monospace;margin-top:2px}
+
+  /* EXAMPLES GRID */
+  .examples{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:900px){.examples{grid-template-columns:1fr 1fr}}
+  @media(max-width:640px){.examples{grid-template-columns:1fr}}
+  .ex{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:9px;
+    padding:14px;cursor:pointer;transition:all .12s;
+    display:flex;flex-direction:column;gap:8px;min-height:120px;
+  }
+  .ex:hover{border-color:var(--cyan);background:#1e2841}
+  .ex .ex-head{display:flex;align-items:center;justify-content:space-between}
+  .ex .ex-nm{font-size:13px;font-weight:600;color:var(--text)}
+  .ex .ex-kind{font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:4px;background:var(--bg-2);border:1px solid var(--line)}
+  .ex .ex-kind.brain{color:#b18bff;border-color:rgba(177,139,255,0.3)}
+  .ex .ex-kind.agent{color:var(--cyan);border-color:rgba(59,214,255,0.3)}
+  .ex .ex-desc{font-size:12px;color:var(--text-3);line-height:1.45;flex:1}
+
+  /* OUTPUT */
+  .output{
+    background:var(--bg-2);border:1px solid var(--line);border-radius:8px;
+    padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;
+    color:var(--text-2);line-height:1.65;min-height:80px;
+    white-space:pre-wrap;word-wrap:break-word;
+  }
+  .output .lbl-out{color:var(--text-3);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;display:block}
+  .output .accent{color:var(--cyan)}
+  .output .good{color:var(--green)}
+  .output .warn{color:var(--amber)}
+  .output strong{color:var(--text)}
+  .cur{display:inline-block;width:7px;height:12px;background:var(--cyan);vertical-align:middle;margin-left:2px;animation:blink 1s steps(2) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  /* TOAST */
+  .toast{
+    position:fixed;bottom:24px;right:24px;
+    background:var(--panel);border:1px solid var(--green);border-radius:8px;
+    padding:12px 16px;max-width:420px;z-index:9999;font-size:12px;color:var(--text);
+    opacity:0;transform:translateY(10px);transition:all .2s;
+  }
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast .tt-lbl{color:var(--green);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;font-family:'JetBrains Mono',monospace}
+
+  .foot{margin-top:30px;padding-top:18px;border-top:1px solid var(--line);text-align:center;color:var(--text-3);font-size:11px;font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">A</div>
+      <div>
+        <h1>NeuroLinked Ops Center</h1>
+        <div class="sub">Local-first · encrypted vault · agents hit real APIs with your keys</div>
+      </div>
+    </div>
+    <div class="status-pills">
+      <span class="pill red"><span class="dot"></span>LIVE</span>
+      <span class="pill"><span class="dot"></span>Z.E.R.O. :8340</span>
+      <span class="pill purple"><span class="dot"></span>BRAIN :8020</span>
+      <span class="pill" id="sec-pill" title="Click for details"><span class="dot"></span>127.0.0.1 LOCKED</span>
+    </div>
+  </div>
+
+  <!-- SECURITY BANNER — surfaces the lockdown so Marc can see it -->
+  <div id="sec-banner" style="background:rgba(61,220,151,0.08);border:1px solid rgba(61,220,151,0.35);border-radius:10px;padding:10px 18px;margin-bottom:18px;display:flex;align-items:center;gap:14px;font-size:12px;color:var(--text-2)">
+    <span style="background:var(--green);color:#0a0f1c;padding:3px 9px;border-radius:4px;font-weight:700;font-size:10px;letter-spacing:.6px;font-family:'JetBrains Mono',monospace">SECURE</span>
+    <div>All services bound to <strong style="color:var(--text);font-family:'JetBrains Mono',monospace">127.0.0.1</strong> · LAN and external requests are blocked at the OS socket level · Brain is AES-256-GCM encrypted at rest · 100% on-device, nothing leaves this machine.</div>
+  </div>
+
+  <!-- 1 · Z.E.R.O. -->
+  <div class="section">
+    <div class="section-head">
+      <div>
+        <h2><span class="num">01</span>Z.E.R.O. — voice + text assistant</h2>
+        <div class="note">Click once to enable audio, then say "Hey Zero" or tap SPACE. He stays active 10 seconds, then drops back to passive listening.</div>
+      </div>
+      <div class="actions">
+        <a class="btn" href="http://localhost:8340" target="_blank">Pop out</a>
+      </div>
+    </div>
+    <iframe id="jarvis-frame" class="embed embed-jarvis" src="/zero" allow="microphone; camera; autoplay; clipboard-read; clipboard-write"></iframe>
+  </div>
+
+  <!-- 2 · BRAIN -->
+  <div class="section">
+    <div class="section-head">
+      <div>
+        <h2><span class="num">02</span>NeuroLinked Brain — private knowledge graph</h2>
+        <div class="note" id="brain-note">10k neurons · AES-256 · watches, learns, indexes</div>
+      </div>
+      <div class="actions">
+        <a class="btn" href="http://localhost:8020" target="_blank">Pop out</a>
+      </div>
+    </div>
+    <iframe id="brain-frame" class="embed embed-brain" src="http://localhost:8020" allow="microphone; camera; autoplay"></iframe>
+    <div class="section-body" style="border-top:1px solid var(--line)">
+      <label class="lbl">Ask the brain (searches your knowledge base)</label>
+      <div class="query-row">
+        <input id="q" placeholder='Try: "contracts", "invoices", "meetings", "clients"…' onkeyup="if(event.key==='Enter')runQuery()" />
+        <button class="btn primary" onclick="runQuery()">Ask brain</button>
+      </div>
+      <div class="results" id="results" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- 3 · CREATE AN AGENT -->
+  <div class="section">
+    <div class="section-head">
+      <div>
+        <h2><span class="num">03</span>Create an Agent</h2>
+        <div class="note">Pick a template or start blank · chain real steps · uses your saved credentials · runs on this machine.</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <!-- STEP 1: What do you want to build? -->
+      <label class="lbl" style="font-size:12px;margin-bottom:10px">1. What do you want to build?</label>
+      <div class="examples" id="templates" style="margin-bottom:22px"></div>
+
+      <!-- STEP 2: Tell Z.E.R.O. -->
+      <div style="background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:16px;margin-bottom:20px">
+        <label class="lbl" style="font-size:12px">2. Or describe it — Z.E.R.O. will scaffold a workflow</label>
+        <div style="display:flex;gap:8px">
+          <input id="jb-desc" placeholder='e.g. "Post to Slack when an invoice goes overdue, then email the customer"' />
+          <button class="btn primary" onclick="jarvisBuild()">Scaffold for me</button>
+        </div>
+        <div id="jb-out" style="margin-top:12px"></div>
+      </div>
+
+      <!-- STEP 3: The builder form -->
+      <div id="builder-form" style="background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:18px;margin-bottom:24px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:13px;font-weight:600">3. Configure & deploy</div>
+          <span id="b-template-note" style="font-size:11px;color:var(--text-3);font-family:'JetBrains Mono',monospace"></span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+          <div>
+            <label class="lbl">Agent name</label>
+            <input id="b-name" placeholder="e.g. Finance Watchdog" />
+          </div>
+          <div>
+            <label class="lbl">What it does (goal)</label>
+            <input id="b-desc" placeholder="e.g. Review overdue AR weekly and draft nudges" />
+          </div>
+        </div>
+
+        <label class="lbl">Workflow steps</label>
+        <div id="b-steps" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px"></div>
+
+        <div style="background:var(--bg-2);border:1px solid var(--line);border-radius:7px;padding:12px;margin-bottom:14px">
+          <label class="lbl" style="margin-bottom:8px">Add a step</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select id="b-step-type" style="flex:1;min-width:260px;background:var(--bg-2);border:1px solid var(--line);border-radius:7px;padding:8px 10px;color:var(--text);font-family:inherit;font-size:13px"></select>
+            <button class="btn" onclick="addStepToBuilder()">+ Add</button>
+          </div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:6px">Tip: inside any field you can reference a previous step's output with <code style="color:var(--cyan);font-family:'JetBrains Mono',monospace">{{step.N.output}}</code> — for example <code style="color:var(--cyan);font-family:'JetBrains Mono',monospace">{{step.2.output}}</code>.</div>
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn" onclick="resetBuilder()">Clear</button>
+          <button class="btn primary" onclick="saveAgent()">Save & deploy</button>
+        </div>
+      </div>
+
+      <!-- AGENT ROOM — visual floor where agents live and work -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <label class="lbl" style="margin:0">Agent Room</label>
+          <span id="agent-count" class="pill"><span class="dot"></span>0 deployed</span>
+        </div>
+        <div id="agent-room" style="background:linear-gradient(180deg,#05091a 0%,#0b1226 100%);border:1px solid var(--line);border-radius:10px;padding:0;overflow:hidden;position:relative;min-height:320px">
+          <svg id="room-svg" viewBox="0 0 1000 420" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;height:auto">
+            <defs>
+              <radialGradient id="g-jarvis" cx="50%" cy="50%">
+                <stop offset="0%" stop-color="#a78bff" stop-opacity="1"/>
+                <stop offset="60%" stop-color="#7b6fff" stop-opacity=".6"/>
+                <stop offset="100%" stop-color="#7b6fff" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="g-brain" cx="50%" cy="50%">
+                <stop offset="0%" stop-color="#6fffc0" stop-opacity="1"/>
+                <stop offset="60%" stop-color="#3ddc97" stop-opacity=".6"/>
+                <stop offset="100%" stop-color="#3ddc97" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="g-agent" cx="50%" cy="50%">
+                <stop offset="0%" stop-color="#7ee9ff" stop-opacity="1"/>
+                <stop offset="55%" stop-color="#3bd6ff" stop-opacity=".7"/>
+                <stop offset="100%" stop-color="#3bd6ff" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="g-active" cx="50%" cy="50%">
+                <stop offset="0%" stop-color="#ffe794" stop-opacity="1"/>
+                <stop offset="55%" stop-color="#ffb84a" stop-opacity=".8"/>
+                <stop offset="100%" stop-color="#ffb84a" stop-opacity="0"/>
+              </radialGradient>
+              <pattern id="grid" x="0" y="0" width="50" height="50" patternUnits="userSpaceOnUse">
+                <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#1a2344" stroke-width="1"/>
+              </pattern>
+            </defs>
+            <rect width="1000" height="420" fill="url(#grid)"/>
+            <!-- Floor reference line -->
+            <line x1="40" y1="310" x2="960" y2="310" stroke="#2b3a5a" stroke-width="1" stroke-dasharray="4 6"/>
+
+            <!-- JARVIS (top-left) -->
+            <g id="jarvis-node" transform="translate(250,110)">
+              <circle r="55" fill="url(#g-jarvis)"/>
+              <circle r="32" fill="#0a0f1c" stroke="#a78bff" stroke-width="1.5"/>
+              <circle r="32" fill="none" stroke="#a78bff" stroke-width="1" opacity=".4">
+                <animate attributeName="r" values="32;45;32" dur="3s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values=".4;0;.4" dur="3s" repeatCount="indefinite"/>
+              </circle>
+              <text text-anchor="middle" y="-70" fill="#e6ecf7" font-family="Inter" font-size="13" font-weight="600">JARVIS</text>
+              <text text-anchor="middle" y="5" fill="#a78bff" font-family="JetBrains Mono" font-size="10" font-weight="500">ORCHESTRATOR</text>
+              <text id="jarvis-status" text-anchor="middle" y="85" fill="#6a7897" font-family="JetBrains Mono" font-size="10">idle</text>
+            </g>
+
+            <!-- NeuroLinked Brain (top-right) -->
+            <g id="brain-node" transform="translate(750,110)">
+              <circle r="55" fill="url(#g-brain)"/>
+              <circle r="32" fill="#0a0f1c" stroke="#3ddc97" stroke-width="1.5"/>
+              <!-- neuron dots -->
+              <g opacity=".9">
+                <circle cx="-18" cy="-10" r="2" fill="#3ddc97"><animate attributeName="opacity" values="1;.2;1" dur="1.8s" repeatCount="indefinite"/></circle>
+                <circle cx="16" cy="-12" r="2" fill="#3ddc97"><animate attributeName="opacity" values=".2;1;.2" dur="2.2s" repeatCount="indefinite"/></circle>
+                <circle cx="0" cy="14" r="2" fill="#3ddc97"><animate attributeName="opacity" values="1;.2;1" dur="2.5s" repeatCount="indefinite"/></circle>
+                <circle cx="-12" cy="12" r="2" fill="#3ddc97"><animate attributeName="opacity" values=".4;1;.4" dur="1.5s" repeatCount="indefinite"/></circle>
+                <circle cx="14" cy="10" r="2" fill="#3ddc97"><animate attributeName="opacity" values="1;.3;1" dur="2s" repeatCount="indefinite"/></circle>
+              </g>
+              <text text-anchor="middle" y="-70" fill="#e6ecf7" font-family="Inter" font-size="13" font-weight="600">NEUROLINKED BRAIN</text>
+              <text text-anchor="middle" y="5" fill="#3ddc97" font-family="JetBrains Mono" font-size="10" font-weight="500">MEMORY</text>
+              <text id="brain-status" text-anchor="middle" y="85" fill="#6a7897" font-family="JetBrains Mono" font-size="10">indexed</text>
+            </g>
+
+            <!-- Beams (drawn dynamically) -->
+            <g id="beams"></g>
+
+            <!-- Agents (drawn dynamically) -->
+            <g id="agents"></g>
+          </svg>
+
+          <div id="room-empty" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:var(--text-3);font-size:13px;background:rgba(10,15,28,.6)">
+            No agents deployed yet. Build one above — they show up on the floor with their own workstation.
+          </div>
+        </div>
+
+        <!-- Compact agent list below the room (for steps inspection + Run buttons) -->
+        <div id="agent-list" style="margin-top:12px"></div>
+      </div>
+
+      <!-- Agent run output -->
+      <div style="margin-top:22px">
+        <label class="lbl">Last agent run</label>
+        <div id="agent-run-out" class="output">Click Run on any agent to watch its workflow execute step-by-step.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5 · CREDENTIALS VAULT -->
+  <div class="section">
+    <div class="section-head">
+      <div>
+        <h2><span class="num">04</span>Credentials Vault</h2>
+        <div class="note">Save API keys, SMTP logins, Slack webhooks · encrypted with Fernet at <code style="font-family:'JetBrains Mono',monospace">~/.neurolinked/credentials.enc</code> · never leaves this machine · agents pick them by name.</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <!-- Add new credential -->
+      <div style="background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:16px;margin-bottom:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:13px;font-weight:600">Add a credential</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+          <div>
+            <label class="lbl">Name (you'll see this in dropdowns)</label>
+            <input id="cred-name" placeholder="e.g. Gmail SMTP · You" />
+          </div>
+          <div>
+            <label class="lbl">Kind</label>
+            <select id="cred-kind" onchange="renderCredFields()" style="background:var(--bg-2);border:1px solid var(--line);border-radius:7px;padding:8px 10px;color:var(--text);font-family:inherit;font-size:13px;width:100%"></select>
+          </div>
+        </div>
+        <div id="cred-fields" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn" onclick="resetCredForm()">Clear</button>
+          <button class="btn primary" onclick="saveCredential()">Save encrypted</button>
+        </div>
+      </div>
+
+      <!-- Saved credentials -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <label class="lbl" style="margin:0">Saved credentials</label>
+          <span id="cred-count" class="pill"><span class="dot"></span>0 stored</span>
+        </div>
+        <div id="cred-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">NeuroLinked Ops Center · Operations Center</div>
+
+</div>
+
+<div class="toast" id="toast"><div class="tt-lbl" id="toast-lbl">Running</div><div id="toast-bd"></div></div>
+
+<script>
+const API = '';
+
+// Auto-inject the launch token on every fetch. Without this header, /api/*
+// returns 401. The token is set in the served HTML by the server itself.
+(function () {
+    const TOKEN = (window.__NEUROLINKED_TOKEN__) || '';
+    const _origFetch = window.fetch.bind(window);
+    window.fetch = function (input, init) {
+        init = init || {};
+        const h = new Headers(init.headers || {});
+        if (TOKEN && !h.has('X-Neurolinked-Token')) {
+            h.set('X-Neurolinked-Token', TOKEN);
+        }
+        return _origFetch(input, { ...init, headers: h });
+    };
+})();
+
+// XSS guard — escape anything that came from user input or server data before inserting via innerHTML.
+// Used anywhere we interpolate agent names, descriptions, step inputs, brain results, LLM output.
+function esc(v){
+  if(v===null||v===undefined) return '';
+  return String(v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function toast(msg, label){
+  const t = document.getElementById('toast');
+  if(label) document.getElementById('toast-lbl').textContent = label;
+  document.getElementById('toast-bd').innerHTML = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer); t._timer = setTimeout(()=>t.classList.remove('show'), 3500);
+}
+
+// ---- BRAIN STATS ----
+async function loadBrainStats(){
+  try{
+    const r = await fetch(API+'/api/brain/stats'); const d = await r.json();
+    if (d.total_notes){
+      document.getElementById('brain-note').textContent =
+        `${d.total_notes.toLocaleString()} notes indexed · AES-256 · local-only`;
+    }
+  }catch(e){}
+}
+
+// ---- BRAIN QUERY ----
+async function runQuery(){
+  const q = document.getElementById('q').value.trim();
+  if(!q) return;
+  const r = document.getElementById('results');
+  r.innerHTML = '<div class="output"><span class="cur"></span></div>';
+  try{
+    const res = await fetch(API+'/api/brain/query?q='+encodeURIComponent(q));
+    const d = await res.json();
+    if (!d.results||!d.results.length){
+      r.innerHTML = `<div class="output">No hits for "<strong>${esc(q)}</strong>". Try: contract, invoice, meeting, client, proposal.</div>`;
+      return;
+    }
+    r.innerHTML = `<div style="color:var(--text-3);font-size:11px;margin-bottom:6px;font-family:'JetBrains Mono',monospace">${esc(d.count||d.results.length)} hits</div>` +
+      d.results.slice(0,6).map(it=>`
+        <div class="r">
+          <div>
+            <div class="r-nm">${esc(it.title||it.path||'(note)')}</div>
+            <div class="r-path">${esc(it.folder||'')} · ${esc(it.path||'')}</div>
+          </div>
+        </div>
+      `).join('');
+  }catch(e){
+    r.innerHTML = `<div class="output"><span class="warn">Brain unreachable.</span> Check port 8020.</div>`;
+  }
+}
+
+// (Hardcoded demo examples were removed — real user-defined agents live in
+// the Create an Agent section below.)
+
+// ============================================================
+//   AGENT BUILDER — state shared across templates, builder, vault
+// ============================================================
+let STEP_CATALOG = [];
+let TEMPLATES = [];
+let CRED_KINDS = [];
+let CREDENTIALS = [];            // public list — id, name, kind (no secrets)
+let BUILDER_STEPS = [];
+let AGENTS_CACHE = [];
+let AGENT_TASK_POLL = null;
+
+async function loadCatalog(){
+  const r = await fetch(API+'/api/agents'); const d = await r.json();
+  STEP_CATALOG = d.step_catalog || [];
+  TEMPLATES    = d.templates || [];
+  CRED_KINDS   = d.credential_kinds || [];
+  CREDENTIALS  = d.credentials || [];
+  AGENTS_CACHE = d.agents || [];
+  const sel = document.getElementById('b-step-type');
+  sel.innerHTML = STEP_CATALOG.map(s=>`<option value="${esc(s.id)}">${esc(s.label)} — ${esc(s.desc)}</option>`).join('');
+  renderTemplates();
+  renderAgentList();
+  renderCredKindsDropdown();
+  renderCredList();
+  renderCredFields();
+}
+
+function renderTemplates(){
+  const c = document.getElementById('templates'); if(!c) return;
+  c.innerHTML = TEMPLATES.map(t=>`
+    <div class="ex" onclick="applyTemplate('${esc(t.id)}')">
+      <div class="ex-head">
+        <div class="ex-nm">${esc(t.name)}</div>
+        <div class="ex-kind agent">${t.steps.length} step${t.steps.length===1?'':'s'}</div>
+      </div>
+      <div class="ex-desc">${esc(t.desc)}</div>
+      <button class="btn small" onclick="event.stopPropagation();applyTemplate('${esc(t.id)}')">Use</button>
+    </div>
+  `).join('');
+}
+
+function applyTemplate(id){
+  const t = TEMPLATES.find(x=>x.id===id); if(!t) return;
+  document.getElementById('b-name').value = t.name==='Blank' ? '' : t.name;
+  document.getElementById('b-desc').value = t.desc;
+  BUILDER_STEPS = JSON.parse(JSON.stringify(t.steps));
+  document.getElementById('b-template-note').textContent = 'Template: ' + t.name;
+  renderBuilderSteps();
+  document.getElementById('builder-form').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function credsForKind(kindRef){
+  // kindRef is e.g. "credential:smtp" or "credential:llm"
+  const want = (kindRef||'').split(':')[1];
+  return CREDENTIALS.filter(c=>c.kind===want);
+}
+
+function addStepToBuilder(){
+  const type = document.getElementById('b-step-type').value;
+  const spec = STEP_CATALOG.find(s=>s.id===type);
+  if(!spec) return;
+  BUILDER_STEPS.push({type, inputs:{}});
+  renderBuilderSteps();
+}
+
+function removeBuilderStep(i){
+  BUILDER_STEPS.splice(i,1);
+  renderBuilderSteps();
+}
+
+function setStepInput(i, name, val){
+  BUILDER_STEPS[i].inputs[name] = val;
+}
+
+function renderBuilderSteps(){
+  const c = document.getElementById('b-steps');
+  if(!BUILDER_STEPS.length){
+    c.innerHTML = '<div style="color:var(--text-3);font-size:12px;padding:10px;border:1px dashed var(--line);border-radius:7px;text-align:center">No steps yet. Pick one below and click + Add step.</div>';
+    return;
+  }
+  c.innerHTML = BUILDER_STEPS.map((s,i)=>{
+    const spec = STEP_CATALOG.find(x=>x.id===s.type);
+    const label = spec ? spec.label : s.type;
+    const fields = (spec?.inputs||[]).map(inp=>{
+      const val = s.inputs[inp.name] || '';
+      // Credential dropdown — pulls from saved creds matching the required kind
+      if(inp.type && inp.type.startsWith('credential:')){
+        const options = credsForKind(inp.type);
+        const missingNote = options.length===0 ? '<div style="font-size:11px;color:var(--amber);margin-top:4px">⚠ No credentials of this kind yet. Add one in Section 05 below.</div>' : '';
+        return `<div style="margin-top:6px">
+          <label class="lbl">${esc(inp.label)}</label>
+          <select onchange="setStepInput(${i},'${esc(inp.name)}',this.value)" style="background:var(--bg-2);border:1px solid var(--line);border-radius:6px;padding:7px 10px;color:var(--text);font-family:inherit;font-size:12px;width:100%">
+            <option value="">— none —</option>
+            ${options.map(o=>`<option value="${esc(o.id)}" ${o.id===val?'selected':''}>${esc(o.name)}</option>`).join('')}
+          </select>
+          ${missingNote}
+        </div>`;
+      }
+      if(inp.type==='textarea'){
+        return `<div style="margin-top:6px"><label class="lbl">${esc(inp.label)}</label><textarea rows="2" onchange="setStepInput(${i},'${esc(inp.name)}',this.value)" style="background:var(--bg-2);border:1px solid var(--line);border-radius:6px;padding:8px 10px;color:var(--text);font-family:inherit;font-size:12px;width:100%;resize:vertical">${esc(val)}</textarea></div>`;
+      }
+      return `<div style="margin-top:6px"><label class="lbl">${esc(inp.label)}</label><input onchange="setStepInput(${i},'${esc(inp.name)}',this.value)" value="${esc(val)}" style="background:var(--bg-2);border:1px solid var(--line);border-radius:6px;padding:7px 10px;color:var(--text);font-family:inherit;font-size:12px;width:100%" /></div>`;
+    }).join('');
+    return `
+      <div style="background:var(--bg-2);border:1px solid var(--line);border-radius:7px;padding:10px 12px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:12px;font-weight:600"><span style="color:var(--text-3);font-family:'JetBrains Mono',monospace">${String(i+1).padStart(2,'0')}</span> · ${esc(label)}</div>
+          <button class="btn small" onclick="removeBuilderStep(${i})">Remove</button>
+        </div>
+        ${fields}
+      </div>`;
+  }).join('');
+}
+
+async function saveAgent(){
+  const name = document.getElementById('b-name').value.trim();
+  const desc = document.getElementById('b-desc').value.trim();
+  if(!name){ toast('Name is required','Agent'); return; }
+  if(!BUILDER_STEPS.length){ toast('Add at least one step','Agent'); return; }
+  const r = await fetch(API+'/api/agents', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name, description:desc, steps:BUILDER_STEPS})});
+  const d = await r.json();
+  if(d.ok){
+    toast(`Deployed: <strong>${name}</strong>`,'Agent');
+    resetBuilder();
+    loadAgents();
+  } else {
+    toast(`Error: ${d.error||'unknown'}`,'Agent');
+  }
+}
+
+function resetBuilder(){
+  document.getElementById('b-name').value = '';
+  document.getElementById('b-desc').value = '';
+  BUILDER_STEPS = [];
+  renderBuilderSteps();
+}
+
+async function loadAgents(){
+  const r = await fetch(API+'/api/agents'); const d = await r.json();
+  AGENTS_CACHE = d.agents || [];
+  CREDENTIALS  = d.credentials || CREDENTIALS;
+  renderAgentList();
+}
+
+function renderAgentList(){
+  document.getElementById('agent-count').innerHTML = `<span class="dot"></span>${AGENTS_CACHE.length} deployed`;
+  renderAgentRoom();
+  const c = document.getElementById('agent-list');
+  if(!AGENTS_CACHE.length){
+    c.innerHTML = '<div class="output">No agents yet. Pick a template or start blank above.</div>';
+    return;
+  }
+  c.innerHTML = AGENTS_CACHE.map(a=>`
+    <div style="background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px">
+        <div>
+          <div style="font-size:13px;font-weight:600">${esc(a.name)}</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px">${esc(a.description||'')}</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn small" onclick="inspectAgent('${esc(a.id)}')">Steps</button>
+          <button class="btn small primary" onclick="runAgent('${esc(a.id)}')">Run</button>
+        </div>
+      </div>
+      <div id="agent-steps-${esc(a.id)}" style="display:none;margin-top:8px;padding:10px;background:var(--bg-2);border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text-3)">
+        ${a.steps.map((s,i)=>`${String(i+1).padStart(2,'0')}. ${esc(s.type)} ${esc(JSON.stringify(s.inputs))}`).join('<br>')}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+//   CREDENTIALS VAULT
+// ============================================================
+function renderCredKindsDropdown(){
+  const sel = document.getElementById('cred-kind'); if(!sel) return;
+  sel.innerHTML = CRED_KINDS.map(k=>`<option value="${esc(k.id)}">${esc(k.label)}</option>`).join('');
+}
+
+function renderCredFields(){
+  const kindId = document.getElementById('cred-kind').value;
+  const kind = CRED_KINDS.find(k=>k.id===kindId);
+  const c = document.getElementById('cred-fields'); if(!c) return;
+  if(!kind){ c.innerHTML = ''; return; }
+  c.innerHTML = kind.fields.map(f=>`
+    <div>
+      <label class="lbl">${esc(f.label)}</label>
+      <input id="cf-${esc(f.name)}" type="${f.type==='password'?'password':'text'}" value="${esc(f.default||'')}" placeholder="${esc(f.default||'')}" />
+    </div>
+  `).join('');
+}
+
+// ============================================================
+//   AGENT ROOM — visual floor plan with avatars per agent
+// ============================================================
+// Each agent gets a fixed workstation position. When it runs, its avatar:
+//   1. leaves its desk (lifts up toward center)
+//   2. flashes beams to the target(s) its current step hits (brain/jarvis/api/email)
+//   3. returns to desk
+//   4. final handoff: beam → JARVIS, beam → Brain (auto-remember)
+const AGENT_POSITIONS = {};     // agent_id -> {hx, hy, wx, wy}  (home desk + work-zone pos)
+const AGENT_STATE = {};          // agent_id -> {at:'home'|'work', step:'...', task_id:'...'}
+
+const STEP_TARGETS = {
+  brain_search:    'brain',
+  brain_remember:  'brain',
+  ask_jarvis:      'jarvis',
+  llm_ask:         'jarvis',
+  send_email:      'email',
+  slack_notify:    'slack',
+  api_request:     'api',
+  call_api:        'api',
+  summarize:       'work',
+  notify:          'work',
+  create_task:     'work',
+};
+
+function targetXY(t){
+  if(t==='jarvis') return [250,110];
+  if(t==='brain')  return [750,110];
+  if(t==='email')  return [500,40];
+  if(t==='slack')  return [560,40];
+  if(t==='api')    return [440,40];
+  return [500,180]; // generic "work zone"
+}
+
+function renderAgentRoom(){
+  const svg = document.getElementById('room-svg'); if(!svg) return;
+  const agentsLayer = document.getElementById('agents');
+  const empty = document.getElementById('room-empty');
+  if(empty) empty.style.display = AGENTS_CACHE.length ? 'none' : 'flex';
+  // Lay out agents along the floor (y=280, x evenly spaced)
+  const n = AGENTS_CACHE.length;
+  const startX = 90, endX = 910, floorY = 280;
+  agentsLayer.innerHTML = AGENTS_CACHE.map((a,i)=>{
+    const x = n===1 ? 500 : startX + (endX-startX)*(i/(n-1||1));
+    AGENT_POSITIONS[a.id] = {hx:x, hy:floorY};
+    const state = AGENT_STATE[a.id] || {at:'home'};
+    const ax = state.at==='work' ? 500 : x;
+    const ay = state.at==='work' ? 180 : floorY;
+    const running = state.at==='work';
+    const glow = running ? 'url(#g-active)' : 'url(#g-agent)';
+    const core = running ? '#ffb84a' : '#3bd6ff';
+    const shortName = (a.name||'Agent').slice(0,16);
+    return `
+      <g class="agent-node" data-id="${esc(a.id)}">
+        <!-- Desk (only when at home) -->
+        <rect x="${x-28}" y="${floorY+18}" width="56" height="4" fill="#1f2a42" rx="2"/>
+        <rect x="${x-22}" y="${floorY+4}" width="44" height="18" fill="#141b2d" stroke="#2b3a5a" rx="2"/>
+        <!-- Agent name label -->
+        <text x="${x}" y="${floorY+40}" text-anchor="middle" fill="#9aa8c2" font-family="Inter" font-size="10" font-weight="500">${esc(shortName)}</text>
+        <!-- Avatar (position may differ when running) -->
+        <g class="avatar" style="transition:transform .9s cubic-bezier(.4,.7,.3,1)" transform="translate(${ax-x},${ay-floorY})" data-id="${esc(a.id)}">
+          <circle cx="${x}" cy="${floorY-6}" r="18" fill="${glow}" />
+          <circle cx="${x}" cy="${floorY-6}" r="10" fill="#0a0f1c" stroke="${core}" stroke-width="1.5"/>
+          ${running ? `<circle cx="${x}" cy="${floorY-6}" r="10" fill="none" stroke="${core}" stroke-width="1" opacity=".5"><animate attributeName="r" values="10;18;10" dur="1s" repeatCount="indefinite"/><animate attributeName="opacity" values=".5;0;.5" dur="1s" repeatCount="indefinite"/></circle>` : ''}
+          <!-- Running step caption above avatar -->
+          ${running && state.step ? `<text x="${x}" y="${floorY-32}" text-anchor="middle" fill="#ffb84a" font-family="JetBrains Mono" font-size="9">${esc(state.step)}</text>` : ''}
+        </g>
+      </g>`;
+  }).join('');
+  drawActiveBeams();
+}
+
+function drawActiveBeams(){
+  const beams = document.getElementById('beams'); if(!beams) return;
+  const lines = [];
+  Object.entries(AGENT_STATE).forEach(([aid,st])=>{
+    if(st.at!=='work' || !st.step) return;
+    const pos = AGENT_POSITIONS[aid]; if(!pos) return;
+    const tgt = STEP_TARGETS[st.step] || 'work';
+    const [tx,ty] = targetXY(tgt);
+    const color = tgt==='brain' ? '#3ddc97' : tgt==='jarvis' ? '#a78bff' : tgt==='email' ? '#ffb84a' : '#3bd6ff';
+    lines.push(`
+      <line x1="500" y1="180" x2="${tx}" y2="${ty}" stroke="${color}" stroke-width="1.5" stroke-dasharray="6 4" opacity=".75">
+        <animate attributeName="stroke-dashoffset" from="0" to="-40" dur="1s" repeatCount="indefinite"/>
+      </line>
+      <circle r="3" fill="${color}">
+        <animateMotion dur="1.4s" repeatCount="indefinite" path="M 500 180 L ${tx} ${ty}"/>
+      </circle>
+    `);
+  });
+  beams.innerHTML = lines.join('');
+}
+
+function pulseNode(id){
+  const status = document.getElementById(id+'-status');
+  if(status){ status.textContent = 'receiving'; status.setAttribute('fill','#3ddc97'); setTimeout(()=>{status.textContent = id==='jarvis' ? 'idle' : 'indexed'; status.setAttribute('fill','#6a7897');}, 2500); }
+}
+
+function animateAgentForTask(t){
+  if(!t || !t.agent) return;
+  const aid = t.agent;
+  const running = t.status==='running' || t.status==='queued';
+  const done = t.status==='done' || t.status==='error' || t.status==='cancelled';
+  // current step type
+  const stepsDone = t.steps_done || [];
+  const currentStep = running ? ((t.steps_done && t.steps_done.length<t.steps_total) ? (stepsDone[stepsDone.length-1]?.step) : null) : null;
+  AGENT_STATE[aid] = running
+    ? { at:'work', step: currentStep || 'preparing', task_id:t.id }
+    : { at:'home' };
+  renderAgentRoom();
+  if(done){
+    // Handoff animation: briefly show a beam agent → JARVIS → Brain
+    setTimeout(()=>{ pulseNode('jarvis'); }, 200);
+    setTimeout(()=>{ pulseNode('brain'); }, 900);
+  }
+}
+
+async function saveCredential(){
+  const name = document.getElementById('cred-name').value.trim();
+  const kind = document.getElementById('cred-kind').value;
+  if(!name){ toast('Credential name required','Vault'); return; }
+  const kindSpec = CRED_KINDS.find(k=>k.id===kind); if(!kindSpec) return;
+  const fields = {};
+  kindSpec.fields.forEach(f=>{
+    const el = document.getElementById('cf-'+f.name);
+    if(el) fields[f.name] = el.value;
+  });
+  const r = await fetch(API+'/api/credentials', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,kind,fields})});
+  const d = await r.json();
+  if(d.ok){
+    toast(`Encrypted & saved: <strong>${esc(name)}</strong>`,'Vault');
+    resetCredForm();
+    loadCredentials();
+  } else {
+    toast(`Error: ${esc(d.error||'unknown')}`,'Vault');
+  }
+}
+
+function resetCredForm(){
+  document.getElementById('cred-name').value = '';
+  const kindEl = document.getElementById('cred-kind');
+  if(kindEl) kindEl.selectedIndex = 0;
+  renderCredFields();
+}
+
+async function loadCredentials(){
+  const r = await fetch(API+'/api/credentials'); const d = await r.json();
+  CREDENTIALS = d.credentials || [];
+  renderCredList();
+  renderBuilderSteps();    // refresh builder dropdowns that depend on CREDENTIALS
+}
+
+function renderCredList(){
+  const c = document.getElementById('cred-list'); if(!c) return;
+  document.getElementById('cred-count').innerHTML = `<span class="dot"></span>${CREDENTIALS.length} stored`;
+  if(!CREDENTIALS.length){
+    c.innerHTML = '<div class="output">No credentials stored yet. Agents with credential steps will warn you until you add one.</div>';
+    return;
+  }
+  c.innerHTML = CREDENTIALS.map(cr=>{
+    const k = CRED_KINDS.find(x=>x.id===cr.kind);
+    return `
+    <div style="background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div>
+        <div style="font-size:13px;font-weight:600">${esc(cr.name)}</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;font-family:'JetBrains Mono',monospace">kind: ${esc(k?k.label:cr.kind)} · id: ${esc(cr.id)}</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn small" onclick="testCredential('${esc(cr.id)}')">Test</button>
+        <button class="btn small" onclick="deleteCredential('${esc(cr.id)}','${esc(cr.name)}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function testCredential(id){
+  toast('Testing…','Vault');
+  const r = await fetch(API+'/api/credentials/test', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+  const d = await r.json();
+  if(d.ok) toast(esc(d.message||'Credential valid ✓'),'Vault');
+  else toast('Test failed: '+esc(d.error||'unknown'),'Vault');
+}
+
+async function deleteCredential(id, name){
+  if(!confirm(`Delete credential "${name}"? Any agent step using it will stop working until replaced.`)) return;
+  const r = await fetch(API+'/api/credentials/delete', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+  const d = await r.json();
+  if(d.ok){ toast(`Deleted: <strong>${esc(name)}</strong>`,'Vault'); loadCredentials(); }
+}
+
+function inspectAgent(id){
+  const el = document.getElementById('agent-steps-'+id);
+  if(el) el.style.display = el.style.display==='none' ? 'block' : 'none';
+}
+
+async function runAgent(id){
+  toast('Launching agent…','Agent');
+  const r = await fetch(API+`/api/agents/${id}/run`, {method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+  const d = await r.json();
+  if(!d.task_id){ toast('Failed to launch','Agent'); return; }
+  if(AGENT_TASK_POLL) clearInterval(AGENT_TASK_POLL);
+  AGENT_TASK_POLL = setInterval(()=>pollAgentTask(d.task_id), 900);
+  pollAgentTask(d.task_id);
+}
+
+async function pollAgentTask(tid){
+  const r = await fetch(API+`/api/agent/tasks/${encodeURIComponent(tid)}`); if(!r.ok) return;
+  const t = await r.json();
+  animateAgentForTask(t);       // update the Agent Room viz
+  const out = document.getElementById('agent-run-out');
+  const header = `<span class="lbl-out">${esc(t.status.toUpperCase())} · ${esc(t.agent_name||t.agent)}${t.progress?' · '+esc(t.progress):''}</span>`;
+  const steps = (t.steps_done||[]).map((s,i)=>{
+    const dot = s.ok ? '<span class="good">✓</span>' : '<span class="warn">✗</span>';
+    const detail = Object.entries(s).filter(([k])=>!['step','ts','ok'].includes(k)).map(([k,v])=>`    ${esc(k)}: ${esc(typeof v==='string'?v:JSON.stringify(v).slice(0,140))}`).join('\n');
+    return `${dot} <strong>${String(i+1).padStart(2,'0')} · ${esc(s.step)}</strong> <span style="color:var(--text-3)">${esc(s.ts)}</span>\n${detail}`;
+  }).join('\n\n');
+  out.innerHTML = header + steps + (t.status==='done' ? '\n\n<span class="good">Workflow complete.</span>' : t.status==='running' ? '<span class="cur"></span>' : '');
+  if(t.status==='done' || t.status==='error' || t.status==='cancelled'){
+    clearInterval(AGENT_TASK_POLL); AGENT_TASK_POLL = null;
+  }
+}
+
+async function jarvisBuild(){
+  const desc = document.getElementById('jb-desc').value.trim();
+  if(!desc){ toast('Describe the agent first','JARVIS'); return; }
+  const out = document.getElementById('jb-out');
+  out.innerHTML = '<div class="output"><span class="cur"></span></div>';
+  const r = await fetch(API+'/api/jarvis/builder', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({description:desc, turn:0})});
+  const d = await r.json();
+  const s = d.suggested;
+  // JSON.stringify escapes quotes, esc() wraps the remaining HTML-unsafe chars; attributes are double-quoted.
+  const suggestedJson = JSON.stringify(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  out.innerHTML = `
+    <div class="output">
+      <span class="lbl-out">JARVIS proposes</span>
+      <strong class="accent">${esc(s.name)}</strong> — ${esc(s.description)}
+
+      Steps:
+      ${s.steps.map((st,i)=>`  ${String(i+1).padStart(2,'0')}. ${esc(st.type)} → ${esc(JSON.stringify(st.inputs))}`).join('\n')}
+
+      <span class="good">JARVIS asks:</span> ${esc(d.question)}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn primary" onclick="confirmJarvisAgent(JSON.parse(this.dataset.agent))" data-agent="${suggestedJson}">Save as-is</button>
+      <button class="btn" onclick="loadIntoBuilder(JSON.parse(this.dataset.agent))" data-agent="${suggestedJson}">Edit in builder</button>
+    </div>
+  `;
+}
+
+async function confirmJarvisAgent(suggested){
+  const r = await fetch(API+'/api/jarvis/builder', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({turn:1, suggested})});
+  const d = await r.json();
+  if(d.done){
+    toast(`Saved: <strong>${d.saved.name}</strong>`,'JARVIS');
+    loadAgents();
+    document.getElementById('jb-desc').value = '';
+    document.getElementById('jb-out').innerHTML = `<div class="output good">Saved. Find it in "My agents" below and click Run.</div>`;
+  }
+}
+
+function loadIntoBuilder(s){
+  document.getElementById('b-name').value = s.name;
+  document.getElementById('b-desc').value = s.description;
+  BUILDER_STEPS = JSON.parse(JSON.stringify(s.steps));
+  renderBuilderSteps();
+  document.getElementById('builder-form').scrollIntoView({behavior:'smooth'});
+}
+
+// ---- BOOT ----
+loadBrainStats();
+loadCatalog().then(()=>{ renderBuilderSteps(); });
+setInterval(loadBrainStats, 30000);
+setInterval(loadAgents, 12000);
+setInterval(loadCredentials, 20000);
+document.querySelector('.foot').textContent = 'NeuroLinked Ops Center · Operations Center · ' + new Date().toLocaleDateString();
+</script>
+
+<!-- Cross-iframe cortex sync — when Jarvis fires a region, relay to the
+     NeuroLinked Brain iframe so the same region lights up in the same color
+     at the same instant. The Brain-side listener is defined in
+     neurolinked-brain/dashboard/js/brain3d.js. -->
+<script>
+(function () {
+    const brainFrame  = document.getElementById('brain-frame');
+    const jarvisFrame = document.getElementById('jarvis-frame');
+    window.addEventListener('message', (ev) => {
+        const d = ev.data;
+        if (!d || typeof d !== 'object') return;
+        if (d.type === 'jarvis_cortex_fire') {
+            // Forward to the Brain frame. Cross-origin-safe: we use '*'
+            // because the iframes are on different localhost ports.
+            if (brainFrame && brainFrame.contentWindow) {
+                try { brainFrame.contentWindow.postMessage(d, '*'); } catch(_) {}
+            }
+        }
+    });
+})();
+</script>
+</body>
+</html>

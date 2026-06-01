@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z.E.R.O.</title>
+    <link rel="stylesheet" href="/static/style.css?v=zero18">
+    <style>
+        /* Cortex status rail — real per-region health from /api/status */
+        #cortex-rail {
+            position: fixed;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+            font-size: 10.5px;
+            letter-spacing: 0.08em;
+            z-index: 40;
+            pointer-events: auto;
+        }
+        #cortex-rail .cx {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 3px 10px 3px 8px;
+            border: 1px solid rgba(120,200,255,0.18);
+            background: rgba(0,16,28,0.55);
+            color: #8ec0d8;
+            min-width: 170px;
+            justify-content: space-between;
+            border-radius: 2px;
+            backdrop-filter: blur(4px);
+        }
+        #cortex-rail .cx .dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: #5b6672;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.6);
+        }
+        #cortex-rail .cx.ok   { color: #7ff0b8; border-color: rgba(90,240,180,0.35); }
+        #cortex-rail .cx.ok   .dot { background: #3ef09c; box-shadow: 0 0 6px #3ef09c; }
+        #cortex-rail .cx.bad  { color: #ff6c6c; border-color: rgba(255,108,108,0.38); }
+        #cortex-rail .cx.bad  .dot { background: #ff4040; box-shadow: 0 0 6px #ff4040; }
+        #cortex-rail .cx.plan { color: #9a8ac4; border-color: rgba(154,138,196,0.28); font-style: italic; }
+        #cortex-rail .cx.plan .dot { background: #9a8ac4; }
+        #cortex-rail .cx .name  { font-weight: 600; letter-spacing: 0.12em; }
+        #cortex-rail .cx .state { font-size: 9.5px; opacity: 0.7; }
+        #cortex-rail .header {
+            opacity: 0.6; font-size: 9.5px; letter-spacing: 0.22em;
+            padding: 0 2px; margin-bottom: 2px; color: #a9cadb;
+        }
+    </style>
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+    </script>
+</head>
+<body>
+    <!-- Boot sequence overlay (Stark-style power-on) -->
+    <div id="boot-overlay">
+        <div id="boot-center">
+            <div id="boot-title">Z.E.R.O.</div>
+            <div id="boot-subtitle">EXECUTIVE OPERATOR</div>
+            <div id="boot-ring">
+                <div class="boot-ring-arc r1"></div>
+                <div class="boot-ring-arc r2"></div>
+                <div class="boot-ring-arc r3"></div>
+                <div id="boot-core"></div>
+            </div>
+            <div id="boot-log"></div>
+            <div id="boot-progress"><div id="boot-progress-fill"></div></div>
+            <div id="boot-footer">Z.E.R.O. · CORE ONLINE</div>
+        </div>
+        <div id="boot-glitch"></div>
+    </div>
+
+    <canvas id="scene"></canvas>
+
+    <div id="hud">
+        <div class="hud-corner top-left">
+            <div class="hud-label">Z.E.R.O.</div>
+            <div class="hud-sub">Executive Operator · Neurolink Brain v1</div>
+        </div>
+        <div class="hud-corner top-right">
+            <div class="hud-label" id="state-label">INITIALIZING</div>
+            <div class="hud-sub" id="clock">--:--:--</div>
+        </div>
+        <div class="hud-corner bottom-left">
+            <div class="hud-sub" id="mic-status">MIC · STANDBY</div>
+            <div class="mic-meter"><div id="mic-bar"></div></div>
+        </div>
+        <div class="hud-corner bottom-right">
+            <div class="hud-sub">"HEY ZERO" · OR SPACE</div>
+            <div class="hud-sub" id="hint-text">Click anywhere to begin</div>
+        </div>
+    </div>
+
+    <div id="transcript-wrapper">
+        <div id="live-transcript"></div>
+        <div id="transcript"></div>
+    </div>
+
+    <div id="thought-feed"></div>
+
+    <!-- Brain region labels (projected from 3D to screen each frame) -->
+    <div id="region-labels"></div>
+
+    <!-- Webcam: live preview + hidden capture canvas -->
+    <div id="webcam-container">
+        <video id="webcam" autoplay playsinline muted></video>
+        <div id="webcam-eye"></div>
+        <div id="webcam-label">CAM</div>
+    </div>
+    <canvas id="webcam-canvas" style="display:none"></canvas>
+
+    <!-- Cortex status rail — populated by /api/status polling below -->
+    <div id="cortex-rail" aria-live="polite">
+        <div class="header">NEUROLINK · CORTEX STATUS</div>
+    </div>
+
+    <!-- Settings gear button (preserved from previous UI) -->
+    <button id="settings-btn" title="Settings" aria-label="Open settings">⚙</button>
+
+    <!-- Settings modal (preserved from previous UI; drives /api/settings hot-reload) -->
+    <div id="settings-modal" class="hidden">
+        <div class="settings-card">
+            <div class="settings-header">
+                <div class="settings-title">Settings</div>
+                <button id="settings-close" aria-label="Close">×</button>
+            </div>
+            <div class="settings-body">
+                <div class="settings-section">
+                    <div class="settings-section-title">Language Model</div>
+                    <label class="settings-field">
+                        <span>Provider</span>
+                        <select id="s-llm_provider">
+                            <option value="anthropic">Claude (Anthropic)</option>
+                            <option value="openai">GPT (OpenAI)</option>
+                            <option value="groq">Groq (fast, free-tier)</option>
+                            <option value="ollama">Ollama (local, free)</option>
+                            <option value="xai">Grok (xAI)</option>
+                        </select>
+                    </label>
+                    <label class="settings-field">
+                        <span>Model <small>(optional override)</small></span>
+                        <input id="s-llm_model" type="text" placeholder="e.g. claude-haiku-4-5, gpt-4o-mini, llama-3.3-70b-versatile">
+                    </label>
+                    <label class="settings-field" data-provider="anthropic">
+                        <span>Anthropic key</span>
+                        <input id="s-anthropic_api_key" type="password" placeholder="sk-ant-...">
+                    </label>
+                    <label class="settings-field" data-provider="openai">
+                        <span>OpenAI key</span>
+                        <input id="s-openai_api_key" type="password" placeholder="sk-...">
+                    </label>
+                    <label class="settings-field" data-provider="groq">
+                        <span>Groq key</span>
+                        <input id="s-groq_api_key" type="password" placeholder="gsk_...">
+                    </label>
+                    <label class="settings-field" data-provider="xai">
+                        <span>xAI key</span>
+                        <input id="s-xai_api_key" type="password" placeholder="xai-...">
+                    </label>
+                    <label class="settings-field" data-provider="ollama">
+                        <span>Ollama URL</span>
+                        <input id="s-ollama_api_key" type="text" value="ollama" placeholder="leave as 'ollama' for localhost:11434">
+                    </label>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">Voice</div>
+                    <label class="settings-field">
+                        <span>Voice mode</span>
+                        <select id="s-tts_provider">
+                            <option value="auto">Auto (free browser voice unless ElevenLabs set)</option>
+                            <option value="browser">Browser (free, built-in)</option>
+                            <option value="elevenlabs">ElevenLabs (premium, requires key)</option>
+                        </select>
+                    </label>
+                    <label class="settings-field">
+                        <span>ElevenLabs key</span>
+                        <input id="s-elevenlabs_api_key" type="password" placeholder="sk_...">
+                    </label>
+                    <label class="settings-field">
+                        <span>ElevenLabs voice ID</span>
+                        <input id="s-elevenlabs_voice_id" type="text" placeholder="e.g. EXAVITQu4vr4xnSDxMaL">
+                    </label>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">You</div>
+                    <label class="settings-field">
+                        <span>Your name</span>
+                        <input id="s-user_name" type="text" placeholder="Your name">
+                    </label>
+                    <label class="settings-field">
+                        <span>How Jarvis addresses you</span>
+                        <input id="s-user_address" type="text" placeholder="Sir, ma'am, friend...">
+                    </label>
+                    <label class="settings-field">
+                        <span>City (for weather)</span>
+                        <input id="s-city" type="text" placeholder="New York">
+                    </label>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">NeuroLinked Brain</div>
+                    <label class="settings-field">
+                        <span>Brain URL</span>
+                        <input id="s-neurolink_url" type="text" placeholder="http://localhost:8000">
+                    </label>
+                    <label class="settings-field settings-checkbox">
+                        <input id="s-auto_connect_neurolink" type="checkbox">
+                        <span>Auto-connect to NeuroLinked Brain on startup</span>
+                    </label>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">GoHighLevel</div>
+                    <label class="settings-field">
+                        <span>Location ID</span>
+                        <input id="s-ghl_location_id" type="text" placeholder="e.g. abcDEFghiJKLmnoPQR12">
+                    </label>
+                    <label class="settings-field">
+                        <span>Private Integration Token</span>
+                        <input id="s-ghl_api_key" type="password" placeholder="pit-...">
+                    </label>
+                    <div id="settings-status" class="settings-status"></div>
+                </div>
+            </div>
+            <div class="settings-footer">
+                <button id="settings-save" class="settings-btn-primary">Save</button>
+                <button id="settings-cancel" class="settings-btn-ghost">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/static/settings.js?v=jarvis17"></script>
+    <script type="module" src="/static/main.js?v=jarvis17"></script>
+    <script>
+        // Honest per-cortex status poll. No fake greens.
+        (function () {
+            const CORTEX_ORDER = [
+                // [api-key, display-label]
+                ["directive",  "PREFRONTAL"],
+                ["control",    "MOTOR"],
+                ["task",       "CONCEPT"],
+                ["brain",      "ASSOCIATION"],
+                ["vision",     "SENSORY"],
+                ["memory",     "PREDICTIVE"],
+                ["code",       "FEATURE"],
+                ["shell",      "BRAINSTEM"],
+                ["note",       "HIPPOCAMPUS"],
+                ["input",      "LANGUAGE"],
+            ];
+            const PLANNED_ORDER = [
+                ["cerebellum", "CEREBELLUM"],
+                ["reflex",     "REFLEX ARC"],
+            ];
+            const AUX_ORDER = [
+                ["config",     "CONFIG"],
+                ["elevenlabs", "TTS"],
+                ["web",        "WEB"],
+            ];
+            const rail = document.getElementById("cortex-rail");
+            const subtitle = document.querySelector(".hud-corner.top-left .hud-sub");
+
+            function row(cls, label, state, tip) {
+                const r = document.createElement("div");
+                r.className = "cx " + cls;
+                r.title = tip || "";
+                r.innerHTML = `<span class="name">${label}</span><span class="state">${state}</span><span class="dot"></span>`;
+                return r;
+            }
+
+            function render(data) {
+                // Wipe old rows (keep header)
+                rail.querySelectorAll(".cx").forEach(n => n.remove());
+
+                if (!data) {
+                    rail.appendChild(row("bad", "STATUS", "UNREACHABLE", "Server /api/status not responding"));
+                    if (subtitle) subtitle.textContent = "NEUROLINK · STATUS UNREACHABLE";
+                    return;
+                }
+
+                for (const [k, label] of CORTEX_ORDER) {
+                    const v = (data.cortexes || {})[k] || { ok: false, msg: "missing" };
+                    rail.appendChild(row(v.ok ? "ok" : "bad", label, v.ok ? "LIVE" : "DOWN", v.msg));
+                }
+                for (const [k, label] of PLANNED_ORDER) {
+                    const v = (data.planned || {})[k] || { ok: false, msg: "" };
+                    rail.appendChild(row("plan", label, "PLANNED", v.msg));
+                }
+                for (const [k, label] of AUX_ORDER) {
+                    const v = (data.aux || {})[k] || { ok: false, msg: "missing" };
+                    rail.appendChild(row(v.ok ? "ok" : "bad", label, v.ok ? "OK" : "DOWN", v.msg));
+                }
+                if (subtitle) {
+                    const badCortex = Object.entries(data.cortexes || {}).filter(([, v]) => !v.ok).map(([k]) => k.toUpperCase());
+                    const badAux = Object.entries(data.aux || {}).filter(([, v]) => !v.ok).map(([k]) => k.toUpperCase());
+                    const bad = [...badCortex, ...badAux];
+                    subtitle.textContent = data.overall_ok
+                        ? "NEUROLINK BRAIN · CONNECTED"
+                        : "NEUROLINK · DOWN: " + bad.join(" · ");
+                }
+            }
+
+            async function poll() {
+                try {
+                    const _t = (typeof window !== 'undefined' && window.__NEUROLINKED_TOKEN__) || '';
+                    const _h = _t ? { 'X-Neurolinked-Token': _t } : {};
+                    const r = await fetch("/api/status", { cache: "no-store", headers: _h });
+                    if (!r.ok) { render(null); return; }
+                    render(await r.json());
+                } catch (_e) {
+                    render(null);
+                }
+            }
+            poll();
+            setInterval(poll, 3000);
+        })();
+    </script>
+</body>
+</html>
