@@ -1,0 +1,244 @@
+/* ============================================================
+   CHAT INPUT BAR — patch à ajouter à la fin de style.css
+   Permet d'envoyer des messages texte ET de copier les réponses
+============================================================ */
+
+/* ── Chat toggle button (coin bas-gauche) ──────────────────── */
+#chat-toggle {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 50;
+    background: rgba(0,16,28,0.75);
+    border: 1px solid rgba(88,225,255,0.35);
+    color: #58e1ff;
+    font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    padding: 7px 14px;
+    cursor: pointer;
+    border-radius: 2px;
+    backdrop-filter: blur(6px);
+    transition: background 0.2s, border-color 0.2s;
+}
+#chat-toggle:hover {
+    background: rgba(88,225,255,0.12);
+    border-color: rgba(88,225,255,0.7);
+}
+#chat-toggle.active {
+    background: rgba(88,225,255,0.15);
+    border-color: #58e1ff;
+    color: #fff;
+}
+
+/* ── Chat panel ────────────────────────────────────────────── */
+#chat-panel {
+    position: fixed;
+    bottom: 60px;
+    left: 20px;
+    width: min(520px, 92vw);
+    max-height: 70vh;
+    z-index: 45;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 10, 20, 0.88);
+    border: 1px solid rgba(88, 225, 255, 0.25);
+    border-radius: 4px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 0 40px rgba(0,0,0,0.6), 0 0 16px rgba(88,225,255,0.06);
+    transform: translateY(12px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+#chat-panel.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+/* ── Chat header ───────────────────────────────────────────── */
+#chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    border-bottom: 1px solid rgba(88,225,255,0.12);
+    font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: rgba(88,225,255,0.6);
+}
+#chat-header span { color: #58e1ff; }
+#chat-clear {
+    background: none;
+    border: none;
+    color: rgba(88,225,255,0.35);
+    cursor: pointer;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    font-family: inherit;
+    padding: 2px 6px;
+    transition: color 0.15s;
+}
+#chat-clear:hover { color: #ff6c6c; }
+
+/* ── Chat messages area ────────────────────────────────────── */
+#chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 120px;
+    max-height: calc(70vh - 110px);
+    scroll-behavior: smooth;
+}
+#chat-messages::-webkit-scrollbar { width: 3px; }
+#chat-messages::-webkit-scrollbar-thumb { background: rgba(88,225,255,0.25); border-radius: 2px; }
+
+/* ── Message bubbles ───────────────────────────────────────── */
+.cmsg {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 100%;
+}
+.cmsg-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+.cmsg.user .cmsg-row { flex-direction: row-reverse; }
+
+.cmsg-bubble {
+    font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    padding: 8px 12px;
+    border-radius: 3px;
+    max-width: calc(100% - 36px);
+    word-break: break-word;
+    white-space: pre-wrap;
+    user-select: text;         /* ← texte sélectionnable */
+    cursor: text;
+}
+.cmsg.user .cmsg-bubble {
+    background: rgba(88,225,255,0.08);
+    border: 1px solid rgba(88,225,255,0.2);
+    color: #9cc0d0;
+    letter-spacing: 0.04em;
+}
+.cmsg.jarvis .cmsg-bubble {
+    background: rgba(0,28,42,0.7);
+    border: 1px solid rgba(88,225,255,0.15);
+    color: #c8eaf5;
+    letter-spacing: 0.03em;
+}
+.cmsg.brain .cmsg-bubble {
+    background: rgba(20,0,40,0.7);
+    border: 1px solid rgba(200,160,255,0.2);
+    color: #e0c8ff;
+    letter-spacing: 0.03em;
+}
+
+/* ── Role label ────────────────────────────────────────────── */
+.cmsg-role {
+    font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    opacity: 0.45;
+    padding: 0 2px;
+}
+.cmsg.user .cmsg-role  { text-align: right; color: #6bb8d0; }
+.cmsg.jarvis .cmsg-role { color: #58e1ff; }
+.cmsg.brain .cmsg-role  { color: #c8a0ff; }
+
+/* ── Copy button ───────────────────────────────────────────── */
+.cmsg-copy {
+    flex-shrink: 0;
+    background: none;
+    border: 1px solid rgba(88,225,255,0.15);
+    color: rgba(88,225,255,0.35);
+    border-radius: 2px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.cmsg-copy:hover {
+    color: #58e1ff;
+    border-color: rgba(88,225,255,0.5);
+    background: rgba(88,225,255,0.08);
+}
+.cmsg-copy.copied {
+    color: #3ef09c;
+    border-color: rgba(62,240,156,0.5);
+}
+
+/* ── Input bar ─────────────────────────────────────────────── */
+#chat-inputbar {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    border-top: 1px solid rgba(88,225,255,0.12);
+}
+#chat-input {
+    flex: 1;
+    background: rgba(0,20,36,0.8);
+    border: 1px solid rgba(88,225,255,0.2);
+    border-radius: 2px;
+    color: #c8eaf5;
+    font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    font-size: 12px;
+    padding: 7px 11px;
+    outline: none;
+    caret-color: #58e1ff;
+    transition: border-color 0.15s;
+    resize: none;
+    height: 36px;
+    min-height: 36px;
+    max-height: 120px;
+}
+#chat-input:focus { border-color: rgba(88,225,255,0.55); }
+#chat-input::placeholder { color: rgba(88,225,255,0.2); }
+#chat-send {
+    background: rgba(88,225,255,0.1);
+    border: 1px solid rgba(88,225,255,0.3);
+    color: #58e1ff;
+    font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    padding: 0 14px;
+    height: 36px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+}
+#chat-send:hover {
+    background: rgba(88,225,255,0.2);
+    border-color: rgba(88,225,255,0.7);
+}
+#chat-send:active { transform: scale(0.97); }
+
+/* ── Textarea auto-resize ──────────────────────────────────── */
+#chat-input.tall {
+    height: auto;
+    min-height: 36px;
+}
+
+/* ── Timestamp ─────────────────────────────────────────────── */
+.cmsg-ts {
+    font-size: 9px;
+    opacity: 0.3;
+    font-family: ui-monospace, monospace;
+    padding: 0 2px;
+}
+.cmsg.user .cmsg-ts { text-align: right; }
